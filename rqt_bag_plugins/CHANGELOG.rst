@@ -2,6 +2,9 @@
 Changelog for package rqt_bag_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.1 (2021-04-12)
+------------------
+
 1.1.0 (2021-03-18)
 ------------------
 * Refactor the Rosbag2 class (`#91 <https://github.com/ros-visualization/rqt_bag/issues/91>`_)
