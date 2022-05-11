@@ -2,6 +2,16 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.0 (2022-05-10)
+------------------
+* Fix the types being passed into QFont and QColor. (`#109 <https://github.com/ros-visualization/rqt_bag/issues/109>`_)
+* Contributors: Chris Lalancette
+
+1.1.2 (2022-02-06)
+------------------
+* Fix: rqt-bag fails to open bag specified on command-line (`#106 <https://github.com/ros-visualization/rqt_bag/issues/106>`_)
+* Contributors: Michael Jeronimo
+
 1.1.1 (2021-04-12)
 ------------------
 * Remove an invalid import statement (`#101 <https://github.com/ros-visualization/rqt_bag/issues/101>`_)
