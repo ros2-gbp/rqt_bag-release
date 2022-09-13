@@ -33,10 +33,10 @@
 from rclpy.time import Time
 from rclpy.duration import Duration
 
-from python_qt_binding.QtCore import qDebug, QPointF, QRectF, Qt, qWarning, Signal
+from python_qt_binding.QtCore import qDebug, QPointF, QRectF, Qt, qWarning, Slot, QSize
 from python_qt_binding.QtGui import QBrush, QCursor, QColor, QFont, \
-    QFontMetrics, QPen, QPolygonF
-from python_qt_binding.QtWidgets import QGraphicsItem
+    QFontMetrics, QPen, QPolygonF, QPalette
+from python_qt_binding.QtWidgets import QGraphicsItem, QCheckBox
 
 import bisect
 import threading
@@ -44,6 +44,22 @@ import threading
 from .index_cache_thread import IndexCacheThread
 from .plugins.raw_view import RawView
 from rqt_bag import bag_helper
+from .timeline_menu import TimelinePopupMenu
+
+
+class TopicPublishCheckBox(QCheckBox):
+
+    def __init__(self, *, size, on_clicked):
+        super().__init__()
+        self.clicked.connect(on_clicked)
+        self.setStyleSheet(
+            'QCheckBox::indicator {'
+            f'  width: {size};'
+            f'  height: {size};'
+            '}'
+        )
+        self.setMinimumSize(size, size)
+        self.resize(size, size)
 
 
 class _SelectionMode(object):
@@ -125,12 +141,15 @@ class TimelineFrame(QGraphicsItem):
         self._topic_font_height = None
         self._topic_name_sizes = None
         # minimum pixels between end of topic name and start of history
+        # or publishing box
         self._topic_name_spacing = 3
         self._topic_font_size = 10
         self._topic_font = QFont("cairo")
         self._topic_font.setPointSize(self._topic_font_size)
         self._topic_font.setBold(False)
         self._topic_vertical_padding = 4
+        # publishing box size
+        self._topic_publishing_box_size = 15
         # percentage of the horiz space that can be used for topic display
         self._topic_name_max_percent = 25.0
 
@@ -190,6 +209,11 @@ class TimelineFrame(QGraphicsItem):
         self.index_cache = {}
         self.invalidated_caches = set()
         self._index_cache_thread = IndexCacheThread(self)
+
+        # topic selected
+        # coloured differently while the popup menu is opened
+        self._highlighted_topic = None
+        self._checkbox_widgets = {}
 
     # TODO the API interface should exist entirely at the bag_timeline level.
     #     Add a "get_draw_parameters()" at the bag_timeline level to access these
@@ -313,7 +337,9 @@ class TimelineFrame(QGraphicsItem):
         area
         """
         allowed_width = self._scene_width * (self._topic_name_max_percent / 100.0)
-        allowed_width = allowed_width - self._topic_name_spacing - self._margin_left
+        allowed_width = (allowed_width
+            - self._topic_name_spacing - self._margin_left
+            - self._topic_publishing_box_size - self._topic_name_spacing)
         trimmed_return = topic_name
         if allowed_width < self._qfont_width(topic_name):
             #  We need to trim the topic
@@ -366,7 +392,8 @@ class TimelineFrame(QGraphicsItem):
                 self._topic_font_height = topic_height
 
         # Update the timeline boundries
-        new_history_left = self._margin_left + max_topic_name_width + self._topic_name_spacing
+        new_history_left = (self._margin_left + self._topic_publishing_box_size +
+            self._topic_name_spacing + max_topic_name_width + self._topic_name_spacing)
         new_history_width = self._scene_width - new_history_left - self._margin_right
         self._history_left = new_history_left
         self._history_width = new_history_width
@@ -454,7 +481,7 @@ class TimelineFrame(QGraphicsItem):
 
             painter.setBrush(QBrush(datatype_color))
             painter.setPen(QPen(datatype_color, 1))
-            painter.drawRect(region_x_start, msg_y, region_width, msg_height)
+            painter.drawRect(int(region_x_start), int(msg_y), int(region_width), int(msg_height))
 
         # Draw active message
         if topic in self.scene()._listeners:
@@ -469,7 +496,8 @@ class TimelineFrame(QGraphicsItem):
                 if playhead_stamp > self._stamp_left and playhead_stamp < self._stamp_right:
                     playhead_x = self._history_left + \
                         (all_stamps[playhead_index] - self._stamp_left) * width_interval
-                    painter.drawLine(playhead_x, msg_y, playhead_x, msg_y + msg_height)
+                    painter.drawLine(
+                        int(playhead_x), int(msg_y), int(playhead_x), int(msg_y + msg_height))
             curpen.setWidth(oldwidth)
             painter.setPen(curpen)
 
@@ -616,15 +644,48 @@ class TimelineFrame(QGraphicsItem):
         Calculate positions of existing topic names and draw them on the left, one for each row
         :param painter: ,''QPainter''
         """
-        topics = self._history_bounds.keys()
-        coords = [(self._margin_left, y + (h / 2) + (self._topic_font_height / 2))
-                  for (_, y, _, h) in self._history_bounds.values()]
-
-        for text, coords in zip([t.lstrip('/') for t in topics], coords):
-            painter.setBrush(self._default_brush)
-            painter.setPen(self._default_pen)
+        for topic, bounds in self._history_bounds.items():
+            _, y, _, h = bounds
+            highlight_color = self.scene().palette().color(QPalette.Highlight)
+            highlight_pen_color = self.scene().palette().color(QPalette.HighlightedText)
+            if topic == self._highlighted_topic:
+                painter.setBrush(QBrush(highlight_color))
+                painter.setPen(QPen(highlight_pen_color))
+                painter.drawRect(
+                    0, y,
+                    self._history_left, h)
+                painter.setBrush(QBrush(highlight_pen_color))
+            else:
+                painter.setPen(self._default_pen)
+                painter.setBrush(self._default_brush)
+            if not self._bag_timeline.is_publishing(topic):
+                painter.setBrush(QBrush(Qt.NoBrush))
             painter.setFont(self._topic_font)
-            painter.drawText(coords[0], coords[1], self._trimmed_topic_name(text))
+            shown_topic_name = self._trimmed_topic_name(topic)
+            painter.drawText(
+                self._margin_left + self._topic_publishing_box_size + self._topic_name_spacing,
+                int(y + h / 2 - self._topic_font_height / 2),
+                self._qfont_width(shown_topic_name),
+                self._topic_font_height,
+                Qt.AlignVCenter,
+                shown_topic_name)
+            if topic not in self._checkbox_widgets:
+                @Slot(bool)
+                def on_clicked(state, topic=topic):
+                    if self._bag_timeline.is_publishing(topic):
+                        self._bag_timeline.stop_publishing(topic)
+                    else:
+                        self._bag_timeline.start_publishing(topic)
+
+                proxy = self.scene().addWidget(TopicPublishCheckBox(
+                    size=self._topic_publishing_box_size, on_clicked=on_clicked))
+                proxy.setParentItem(self)
+                self._checkbox_widgets[topic] = proxy
+            else:
+                proxy = self._checkbox_widgets[topic]
+            proxy.setPos(self._margin_left, y + h / 2 - self._topic_publishing_box_size / 2)
+            proxy.widget().setCheckState(
+                Qt.Checked if self._bag_timeline.is_publishing(topic) else Qt.Unchecked)
 
     def _draw_time_divisions(self, painter):
         """
@@ -670,7 +731,7 @@ class TimelineFrame(QGraphicsItem):
                 painter.setBrush(self._default_brush)
                 painter.setPen(self._default_pen)
                 painter.setFont(self._time_font)
-                painter.drawText(label_x, label_y, label)
+                painter.drawText(int(label_x), int(label_y), label)
 
             painter.setPen(self._major_division_pen)
             painter.drawLine(
@@ -779,11 +840,6 @@ class TimelineFrame(QGraphicsItem):
 
     def is_renderer_active(self, topic):
         return topic in self._rendered_topics
-
-    def toggle_renderers(self):
-        idle_renderers = len(self._rendered_topics) < len(self.topics)
-
-        self.set_renderers_active(idle_renderers)
 
     def set_renderers_active(self, active):
         if active:
@@ -923,11 +979,11 @@ class TimelineFrame(QGraphicsItem):
 
         if clamp_to_visible:
             if fraction <= 0.0:
-                return self._stamp_left
+                return int(self._stamp_left)
             elif fraction >= 1.0:
-                return self._stamp_right
+                return int(self._stamp_right)
 
-        return self._stamp_left + fraction * (self._stamp_right - self._stamp_left)
+        return int(self._stamp_left + fraction * (self._stamp_right - self._stamp_left))
 
     def map_dx_to_dstamp(self, dx):
         """
@@ -952,7 +1008,7 @@ class TimelineFrame(QGraphicsItem):
         if clamp_to_visible:
             fraction = min(1.0, max(0.0, fraction))
 
-        return self._history_left + fraction * self._history_width
+        return int(self._history_left + fraction * self._history_width)
 
     def map_dstamp_to_dx(self, dstamp):
         return (float(dstamp) * self._history_width) / (self._stamp_right - self._stamp_left)
@@ -963,6 +1019,14 @@ class TimelineFrame(QGraphicsItem):
             if y > topic_y and y <= topic_y + topic_h:
                 return topic
         return None
+
+    @property
+    def highlighted_topic(self):
+        return self._highlighted_topic
+
+    @highlighted_topic.setter
+    def highlighted_topic(self, topic_name):
+        self._highlighted_topic = topic_name
 
     # View port manipulation functions
     def reset_timeline(self):
@@ -1157,8 +1221,8 @@ class TimelineFrame(QGraphicsItem):
         if not self._history_left:  # TODO: need a better notion of initialized
             return
 
-        x = event.pos().x()
-        y = event.pos().y()
+        x = event.scenePos().x()
+        y = event.scenePos().y()
 
         if event.buttons() == Qt.NoButton:
             # Mouse moving
@@ -1249,3 +1313,28 @@ class TimelineFrame(QGraphicsItem):
                         self.playhead = Time(seconds=x_stamp)
                     self.scene().update()
             self._dragged_pos = event.pos()
+
+    # Overrides QGraphicsItem.mousePressEvent
+    def mousePressEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            self.on_left_down(event)
+            event.accept()
+        elif event.buttons() == Qt.MidButton:
+            self.on_middle_down(event)
+            event.accept()
+        elif event.buttons() == Qt.RightButton:
+            topic = self.map_y_to_topic(event.scenePos().y())
+            self.highlighted_topic = topic
+            self.scene().update()
+            TimelinePopupMenu(self._bag_timeline, event, topic)
+            self.highlighted_topic = None
+            self.scene().update()
+            event.accept()
+
+    # Overrides QGraphicsItem.mouseReleaseEvent
+    def mouseReleaseEvent(self, event):
+        self.on_mouse_up(event)
+
+    # Overrides QGraphicsItem.mouseMoveEvent
+    def mouseMoveEvent(self, event):
+        self.on_mouse_move(event)
