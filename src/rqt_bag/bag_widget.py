@@ -118,10 +118,7 @@ class BagWidget(QWidget):
         self.record_button.clicked[bool].connect(self._handle_record_clicked)
         self.load_button.clicked[bool].connect(self._handle_load_clicked)
         self.save_button.clicked[bool].connect(self._handle_save_clicked)
-        self.graphics_view.mousePressEvent = self._timeline.on_mouse_down
-        self.graphics_view.mouseReleaseEvent = self._timeline.on_mouse_up
-        self.graphics_view.mouseMoveEvent = self._timeline.on_mouse_move
-        self.graphics_view.wheelEvent = self._timeline.on_mousewheel
+        self.graphics_view.wheelEvent = self.on_mousewheel
         self.closeEvent = self.handle_close
         self.keyPressEvent = self.on_key_press
         # TODO when the closeEvent is properly called by ROS_GUI implement that
@@ -235,7 +232,7 @@ class BagWidget(QWidget):
         self._timeline.navigate_end()
 
     def _handle_thumbs_clicked(self, checked):
-        self._timeline._timeline_frame.toggle_renderers()
+        self._timeline._timeline_frame.set_renderers_active(checked)
 
     def _handle_zoom_all_clicked(self):
         self._timeline.reset_zoom()
@@ -286,12 +283,6 @@ class BagWidget(QWidget):
         for filename in filenames:
             self.load_bag(filename)
 
-        # After loading bag(s), force a resize event on the bag widget so that
-        # it can take the new height of the timeline into account (and show
-        # the scroll bar if necessary)
-        self._timeline._timeline_frame._layout()
-        self._resizeEvent(QResizeEvent(self.size(), self.size()))
-
     def load_bag(self, filename):
         qDebug("Loading '%s' ..." % filename.encode(errors='replace'))
 
@@ -333,6 +324,10 @@ class BagWidget(QWidget):
         self.set_status_text.emit("")
         # reset zoom to show entirety of all loaded bags
         self._timeline.reset_zoom()
+        # After loading bag(s), force a resize event on the bag widget so that
+        # it can take the new height of the timeline into account (and show
+        # the scroll bar if necessary)
+        self.update_size()
 
         # self.progress_bar.setFormat(progress_format)
         # self.progress_bar.setTextVisible(progress_text_visible) # causes a segfault :(
@@ -426,3 +421,14 @@ class BagWidget(QWidget):
 
     def shutdown_all(self):
         self._timeline.handle_close()
+
+    def update_size(self):
+        self._resizeEvent(QResizeEvent(self.size(), self.size()))
+
+    def on_mousewheel(self, event):
+        # scroll -> scroll the page up and down
+        # ctrl+scroll -> zoom-in or zoom out timeline
+        if event.modifiers() & Qt.ControlModifier:
+            self._timeline._timeline_frame.on_mousewheel(event)
+        else:
+            BagGraphicsView.wheelEvent(self.graphics_view, event)
