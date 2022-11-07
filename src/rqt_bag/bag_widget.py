@@ -235,7 +235,7 @@ class BagWidget(QWidget):
         self._timeline.navigate_end()
 
     def _handle_thumbs_clicked(self, checked):
-        self._timeline._timeline_frame.toggle_renderers()
+        self._timeline._timeline_frame.set_renderers_active(checked)
 
     def _handle_zoom_all_clicked(self):
         self._timeline.reset_zoom()
@@ -286,12 +286,6 @@ class BagWidget(QWidget):
         for filename in filenames:
             self.load_bag(filename)
 
-        # After loading bag(s), force a resize event on the bag widget so that
-        # it can take the new height of the timeline into account (and show
-        # the scroll bar if necessary)
-        self._timeline._timeline_frame._layout()
-        self._resizeEvent(QResizeEvent(self.size(), self.size()))
-
     def load_bag(self, filename):
         qDebug("Loading '%s' ..." % filename.encode(errors='replace'))
 
@@ -333,6 +327,10 @@ class BagWidget(QWidget):
         self.set_status_text.emit("")
         # reset zoom to show entirety of all loaded bags
         self._timeline.reset_zoom()
+        # After loading bag(s), force a resize event on the bag widget so that
+        # it can take the new height of the timeline into account (and show
+        # the scroll bar if necessary)
+        self.update_size()
 
         # self.progress_bar.setFormat(progress_format)
         # self.progress_bar.setTextVisible(progress_text_visible) # causes a segfault :(
@@ -426,3 +424,6 @@ class BagWidget(QWidget):
 
     def shutdown_all(self):
         self._timeline.handle_close()
+
+    def update_size(self):
+        self._resizeEvent(QResizeEvent(self.size(), self.size()))
