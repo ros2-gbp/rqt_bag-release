@@ -217,7 +217,7 @@ class TimelinePopupMenu(QMenu):
             self._publish_all = None
             self._publish_none = None
 
-        action = self.exec_(event.screenPos())
+        action = self.exec_(event.globalPos())
         if action is not None and action != 0:
             self.process(action)
 
