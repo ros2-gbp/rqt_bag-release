@@ -3,7 +3,7 @@ from setuptools import setup
 package_name = 'rqt_bag_plugins'
 setup(
     name=package_name,
-    version='1.2.1',
+    version='1.3.0',
     package_dir={'': 'src'},
     packages=['rqt_bag_plugins'],
     data_files=[
@@ -16,7 +16,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     author='Dirk Thomas, Aaron Blasdel, Austin Hendrix, Tim Field',
-    maintainer='Michael Jeronimo, Mabel Zhang',
+    maintainer='Michael Jeronimo',
     maintainer_email='michael.jeronimo@openrobotics.org',
     keywords=['ROS'],
     classifiers=[
