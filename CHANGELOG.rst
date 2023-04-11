@@ -2,6 +2,9 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.1 (2023-04-11)
+------------------
+
 1.3.0 (2023-02-14)
 ------------------
 * Use rosbag2_py API instead of direct bag parsing
