@@ -1,0 +1,12 @@
+Source: ros-iron-rqt-bag-plugins
+Section: misc
+Priority: optional
+Maintainer: Michael Jeronimo <michael.jeronimo@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), ros-iron-ros-workspace, python3-all, python3-setuptools, dh-python
+Homepage: http://wiki.ros.org/rqt_bag
+Standards-Version: 3.9.2
+
+Package: ros-iron-rqt-bag-plugins
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, python3-cairo, python3-pil, ros-iron-geometry-msgs, ros-iron-rclpy, ros-iron-rosbag2, ros-iron-rqt-bag, ros-iron-rqt-gui, ros-iron-rqt-gui-py, ros-iron-rqt-plot, ros-iron-sensor-msgs, ros-iron-std-msgs, ros-iron-ros-workspace
+Description: rqt_bag provides a GUI plugin for displaying and replaying ROS bag files.
