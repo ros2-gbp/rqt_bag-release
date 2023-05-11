@@ -2,6 +2,11 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.2 (2023-05-11)
+------------------
+* Use default storage id (`#140 <https://github.com/ros-visualization/rqt_bag/issues/140>`_)
+* Contributors: Yadunund
+
 1.3.1 (2023-04-11)
 ------------------
 
