@@ -2,10 +2,19 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.3.2 (2023-05-11)
+1.5.0 (2023-06-07)
 ------------------
-* Use default storage id (`#140 <https://github.com/ros-visualization/rqt_bag/issues/140>`_)
+* [ros2] Enable Save (`#142 <https://github.com/ros-visualization/rqt_bag/issues/142>`_)
+* Call close (`#141 <https://github.com/ros-visualization/rqt_bag/issues/141>`_)
+* Contributors: Yadu
+
+1.4.1 (2023-05-11)
+------------------
+* Use default storage id (`#139 <https://github.com/ros-visualization/rqt_bag/issues/139>`_)
 * Contributors: Yadunund
+
+1.4.0 (2023-04-28)
+------------------
 
 1.3.1 (2023-04-11)
 ------------------
