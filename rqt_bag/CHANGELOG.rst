@@ -2,19 +2,15 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.5.0 (2023-06-07)
+1.3.3 (2023-07-14)
 ------------------
-* [ros2] Enable Save (`#142 <https://github.com/ros-visualization/rqt_bag/issues/142>`_)
-* Call close (`#141 <https://github.com/ros-visualization/rqt_bag/issues/141>`_)
-* Contributors: Yadu
-
-1.4.1 (2023-05-11)
-------------------
-* Use default storage id (`#139 <https://github.com/ros-visualization/rqt_bag/issues/139>`_)
+* Fix metadata.yaml not writing to disk when recorder is stopped (`#143 <https://github.com/ros-visualization/rqt_bag/issues/143>`_)
 * Contributors: Yadunund
 
-1.4.0 (2023-04-28)
+1.3.2 (2023-05-11)
 ------------------
+* Use default storage id (`#140 <https://github.com/ros-visualization/rqt_bag/issues/140>`_)
+* Contributors: Yadunund
 
 1.3.1 (2023-04-11)
 ------------------

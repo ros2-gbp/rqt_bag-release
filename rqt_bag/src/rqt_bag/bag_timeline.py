@@ -125,10 +125,6 @@ class BagTimeline(QGraphicsScene):
         """
         return self._context
 
-    def stop_recorder(self):
-        if self._recorder:
-            self._recorder.stop()
-
     def handle_close(self):
         """
         Cleans up the timeline, bag and any threads
@@ -143,7 +139,8 @@ class BagTimeline(QGraphicsScene):
             self._message_loaders[topic].stop()
         if self._player:
             self._player.stop()
-        self.stop_recorder()
+        if self._recorder:
+            self._recorder.stop()
         if self.background_task is not None:
             self.background_task_cancel = True
         self._timeline_frame.handle_close()
