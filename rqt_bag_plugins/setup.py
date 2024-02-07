@@ -3,7 +3,7 @@ from setuptools import setup
 package_name = 'rqt_bag_plugins'
 setup(
     name=package_name,
-    version='1.5.0',
+    version='1.5.1',
     package_dir={'': 'src'},
     packages=['rqt_bag_plugins'],
     data_files=[
@@ -29,4 +29,5 @@ setup(
         'rqt_bag_plugins provides GUI plugins for rqt_bag to display various message types.'
     ),
     license='BSD',
+    tests_require=['pytest'],
 )
