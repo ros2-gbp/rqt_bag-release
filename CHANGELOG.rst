@@ -2,6 +2,9 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.6.0 (2024-04-26)
+------------------
+
 1.5.2 (2024-03-28)
 ------------------
 * Add in copyright tests to rqt_bag. (`#154 <https://github.com/ros-visualization/rqt_bag/issues/154>`_)
