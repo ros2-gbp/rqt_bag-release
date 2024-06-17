@@ -28,13 +28,14 @@
 
 import os
 import time
+import math
 
 
 from ament_index_python import get_resource
 from rclpy import logging
 
 from python_qt_binding import loadUi
-from python_qt_binding.QtCore import qDebug, QFileInfo, Qt, qWarning, Signal
+from python_qt_binding.QtCore import qDebug, Qt, qWarning, Signal
 from python_qt_binding.QtGui import QIcon, QResizeEvent
 from python_qt_binding.QtWidgets import QFileDialog, QGraphicsView, QWidget
 
@@ -42,7 +43,6 @@ from rqt_bag import bag_helper
 from .bag_timeline import BagTimeline
 from .topic_selection import TopicSelection
 from .rosbag2 import Rosbag2
-import yaml
 
 
 class BagGraphicsView(QGraphicsView):
@@ -92,10 +92,10 @@ class BagWidget(QWidget):
         self.faster_button.setIcon(QIcon.fromTheme('media-seek-forward'))
         self.previous_button.setIcon(QIcon.fromTheme('go-previous'))
         self.next_button.setIcon(QIcon.fromTheme('go-next'))
-        self.zoom_in_button.setIcon(QIcon.fromTheme('zoom-in'))
-        self.zoom_out_button.setIcon(QIcon.fromTheme('zoom-out'))
-        self.zoom_all_button.setIcon(QIcon.fromTheme('zoom-original'))
-        self.thumbs_button.setIcon(QIcon.fromTheme('insert-image'))
+        self.zoom_in_button.setIcon(QIcon.fromTheme('add'))
+        self.zoom_out_button.setIcon(QIcon.fromTheme('remove'))
+        self.zoom_all_button.setIcon(QIcon.fromTheme('search'))
+        self.thumbs_button.setIcon(QIcon.fromTheme('image'))
         self.record_button.setIcon(QIcon.fromTheme('media-record'))
         self.load_button.setIcon(QIcon.fromTheme('document-open'))
         self.save_button.setIcon(QIcon.fromTheme('document-save'))
