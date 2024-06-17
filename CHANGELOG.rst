@@ -2,6 +2,12 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (2024-06-17)
+------------------
+* Adapted to rosbag2_py (`#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_)
+* Fixed button icons (`#159 <https://github.com/ros-visualization/rqt_bag/issues/159>`_)
+* Contributors: Alejandro Hernández Cordero
+
 1.6.0 (2024-04-26)
 ------------------
 
