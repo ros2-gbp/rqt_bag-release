@@ -2,6 +2,11 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.5 (2024-07-10)
+------------------
+* Fixed button icons (`#162 <https://github.com/ros-visualization/rqt_bag/issues/162>`_)
+* Contributors: Alejandro Hernández Cordero
+
 1.3.4 (2023-09-08)
 ------------------
 * Enable Save button while recording (`#144 <https://github.com/ros-visualization/rqt_bag/issues/144>`_)
