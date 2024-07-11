@@ -2,42 +2,25 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.0.0 (2024-06-17)
+1.3.5 (2024-07-10)
 ------------------
-* Adapted to rosbag2_py (`#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_)
-* Fixed button icons (`#159 <https://github.com/ros-visualization/rqt_bag/issues/159>`_)
+* Fixed button icons (`#162 <https://github.com/ros-visualization/rqt_bag/issues/162>`_)
 * Contributors: Alejandro Hernández Cordero
 
-1.6.0 (2024-04-26)
+1.3.4 (2023-09-08)
 ------------------
+* Enable Save button while recording (`#144 <https://github.com/ros-visualization/rqt_bag/issues/144>`_)
+* Contributors: Emerson Knapp, Yadunund
 
-1.5.2 (2024-03-28)
+1.3.3 (2023-07-14)
 ------------------
-* Add in copyright tests to rqt_bag. (`#154 <https://github.com/ros-visualization/rqt_bag/issues/154>`_)
-* Add a test dependency on pytest. (`#153 <https://github.com/ros-visualization/rqt_bag/issues/153>`_)
-* Revert "Add a dependency on pytest to rqt_bag and rqt_bag_plugins. (#… (`#151 <https://github.com/ros-visualization/rqt_bag/issues/151>`_)
-* Update maintainer to myself. (`#150 <https://github.com/ros-visualization/rqt_bag/issues/150>`_)
-* Update maintainer list in package.xml files (`#149 <https://github.com/ros-visualization/rqt_bag/issues/149>`_)
-* Contributors: Chris Lalancette, Michael Jeronimo
-
-1.5.1 (2024-02-07)
-------------------
-* Add a dependency on pytest to rqt_bag and rqt_bag_plugins. (`#148 <https://github.com/ros-visualization/rqt_bag/issues/148>`_)
-* Contributors: Chris Lalancette
-
-1.5.0 (2023-06-07)
-------------------
-* [ros2] Enable Save (`#142 <https://github.com/ros-visualization/rqt_bag/issues/142>`_)
-* Call close (`#141 <https://github.com/ros-visualization/rqt_bag/issues/141>`_)
-* Contributors: Yadu
-
-1.4.1 (2023-05-11)
-------------------
-* Use default storage id (`#139 <https://github.com/ros-visualization/rqt_bag/issues/139>`_)
+* Fix metadata.yaml not writing to disk when recorder is stopped (`#143 <https://github.com/ros-visualization/rqt_bag/issues/143>`_)
 * Contributors: Yadunund
 
-1.4.0 (2023-04-28)
+1.3.2 (2023-05-11)
 ------------------
+* Use default storage id (`#140 <https://github.com/ros-visualization/rqt_bag/issues/140>`_)
+* Contributors: Yadunund
 
 1.3.1 (2023-04-11)
 ------------------

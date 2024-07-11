@@ -1,35 +1,39 @@
+# Software License Agreement (BSD License)
+#
 # Copyright (c) 2012, Willow Garage, Inc.
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+# modification, are permitted provided that the following conditions
+# are met:
 #
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
 #
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the
-#      documentation and/or other materials provided with the distribution.
-#
-#    * Neither the name of the Willow Garage nor the names of its
-#      contributors may be used to endorse or promote products derived from
-#      this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
 from rclpy.time import Time
 from rclpy.duration import Duration
 
-from python_qt_binding.QtCore import qDebug, QPointF, QRectF, Qt, qWarning, Slot
+from python_qt_binding.QtCore import qDebug, QPointF, QRectF, Qt, qWarning, Slot, QSize
 from python_qt_binding.QtGui import QBrush, QCursor, QColor, QFont, \
     QFontMetrics, QPen, QPolygonF, QPalette
 from python_qt_binding.QtWidgets import QGraphicsItem, QCheckBox
@@ -104,6 +108,7 @@ class TimelineFrame(QGraphicsItem):
         self._margin_left = 4
         self._margin_right = 20
         self._margin_bottom = 20
+        self._history_top = 30
 
         # Background Rendering
         # color of background of timeline before first message and after last
@@ -411,6 +416,7 @@ class TimelineFrame(QGraphicsItem):
 
             y += topic_height
 
+        # new_history_bottom = max([y + h for (x, y, w, h) in self._history_bounds.values()]) - 1
         new_history_bottom = max([y + h for (_, y, _, h) in self._history_bounds.values()]) - 1
         if new_history_bottom != self._history_bottom:
             self._history_bottom = new_history_bottom
@@ -636,7 +642,7 @@ class TimelineFrame(QGraphicsItem):
     def _draw_topic_names(self, painter):
         """
         Calculate positions of existing topic names and draw them on the left, one for each row
-        :param painter: allows access to pain functions,''QPainter''
+        :param painter: ,''QPainter''
         """
         for topic, bounds in self._history_bounds.items():
             _, y, _, h = bounds
@@ -678,10 +684,8 @@ class TimelineFrame(QGraphicsItem):
             else:
                 proxy = self._checkbox_widgets[topic]
             proxy.setPos(self._margin_left, y + h / 2 - self._topic_publishing_box_size / 2)
-            if proxy.widget().isChecked() and not self._bag_timeline.is_publishing(topic):
-                proxy.widget().setChecked(True)
-            elif not proxy.widget().isChecked() and self._bag_timeline.is_publishing(topic):
-                proxy.widget().setChecked(False)
+            proxy.widget().setCheckState(
+                Qt.Checked if self._bag_timeline.is_publishing(topic) else Qt.Unchecked)
 
     def _draw_time_divisions(self, painter):
         """
