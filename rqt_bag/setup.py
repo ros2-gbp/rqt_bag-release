@@ -3,7 +3,7 @@ from setuptools import setup
 package_name = 'rqt_bag'
 setup(
     name=package_name,
-    version='1.3.5',
+    version='2.0.1',
     package_dir={'': 'src'},
     packages=['rqt_bag', 'rqt_bag.plugins'],
     data_files=[
@@ -30,5 +30,6 @@ setup(
         'rqt_bag provides a GUI plugin for displaying and replaying ROS bag files.'
     ),
     license='BSD',
+    tests_require=['pytest'],
     scripts=['scripts/rqt_bag'],
 )

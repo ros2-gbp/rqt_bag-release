@@ -1,52 +1,45 @@
-# Software License Agreement (BSD License)
-#
 # Copyright (c) 2019, PickNik Consulting.
 # Copyright (c) 2020, Open Source Robotics Foundation, Inc.
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
+# modification, are permitted provided that the following conditions are met:
 #
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above
-#    copyright notice, this list of conditions and the following
-#    disclaimer in the documentation and/or other materials provided
-#    with the distribution.
-#  * Neither the name of Willow Garage, Inc. nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
+#    * Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#    * Neither the name of the Willow Garage nor the names of its
+#      contributors may be used to endorse or promote products derived from
+#      this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
 """A rosbag abstraction with functionality required by rqt_bag."""
 
 from collections import namedtuple
 import os
-import pathlib
 
 from rclpy.clock import Clock, ClockType
 from rclpy.duration import Duration
 from rclpy import logging
 from rclpy.serialization import deserialize_message
-from rclpy.time import Time
 import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
-import yaml
 
-from rosbag2_py import get_default_storage_id
+from rosbag2_py import get_default_storage_id, StorageFilter
 
 WRITE_ONLY_MSG = "open for writing only, returning None"
 
@@ -129,7 +122,16 @@ class Rosbag2:
 
         self.reader.set_read_order(rosbag2_py.ReadOrder(reverse=True))
         self.reader.seek(timestamp.nanoseconds)
-        return self.read_next() if self.reader.has_next() else None
+
+        # Set filter for topic of string type
+        if topic:
+            storage_filter = StorageFilter(topics=[topic])
+            self.reader.set_filter(storage_filter)
+
+        result = self.read_next() if self.reader.has_next() else None
+        # No filter
+        self.reader.reset_filter()
+        return result
 
     def get_entry_after(self, timestamp, topic=None):
         """Get the next entry after a given timestamp."""
@@ -167,4 +169,4 @@ class Rosbag2:
         msg_type_name = self.get_topic_type(entry.topic)
         msg_type = get_message(msg_type_name)
         ros_message = deserialize_message(entry.data, msg_type)
-        return (ros_message, msg_type_name, entry.topic)
+        return (ros_message, msg_type_name)
