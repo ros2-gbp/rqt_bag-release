@@ -2,17 +2,35 @@
 Changelog for package rqt_bag_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.0.1 (2024-09-04)
+1.5.4 (2024-09-06)
 ------------------
 
-2.0.0 (2024-06-17)
+1.5.3 (2024-05-14)
 ------------------
-* Adapted to rosbag2_py (`#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_)
-* Fixed image timeline renderer (`#158 <https://github.com/ros-visualization/rqt_bag/issues/158>`_)
-* Contributors: Alejandro Hernández Cordero
-
-1.6.0 (2024-04-26)
-------------------
+* Adapted to rosbag2_py (backport `#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_) (`#165 <https://github.com/ros-visualization/rqt_bag/issues/165>`_)
+  Adapted to rosbag2_py (`#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_)
+  * Switch to an in-built ImageQt class.
+  That's because in newer versions of PIL, they skip over
+  PyQt5 support even though it works.
+  * Update for new rosbag2_py API.
+  * Fix TopicMetadata call
+  * Avoid freeze the gui
+  * Fixed checkboes
+  * Update with the license from PIL.
+  Note that this is an OSI-approved license, even though
+  it is technically deprecated by
+  OSI: https://opensource.org/license/historical-php
+  * Only change the checkbox when needed.
+  Otherwise, we end up with endless paint() calls which
+  hammer the CPU.
+  * A few small fixes for PIL.
+  (cherry picked from commit e7879325f075c9d6749a4324618691933727574c)
+  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
+* Fixed image timeline renderer (backport `#158 <https://github.com/ros-visualization/rqt_bag/issues/158>`_) (`#163 <https://github.com/ros-visualization/rqt_bag/issues/163>`_)
+  Fixed image timeline renderer (`#158 <https://github.com/ros-visualization/rqt_bag/issues/158>`_)
+  (cherry picked from commit a939f27f6323ba1117edaafcdc498fc982743d4f)
+  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
+* Contributors: mergify[bot]
 
 1.5.2 (2024-03-28)
 ------------------
