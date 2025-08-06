@@ -1,3 +1,5 @@
+# Software License Agreement (BSD License)
+#
 # Copyright (c) 2012, Willow Garage, Inc.
 # All rights reserved.
 #
@@ -5,21 +7,21 @@
 # modification, are permitted provided that the following conditions
 # are met:
 #
-#   * Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above
-#     copyright notice, this list of conditions and the following
-#     disclaimer in the documentation and/or other materials provided
-#     with the distribution.
-#   * Neither the name of the Willow Garage, Inc. nor the names of its
-#     contributors may be used to endorse or promote products derived
-#     from this software without specific prior written permission.
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
 # FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 # INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
 # BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
@@ -28,11 +30,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-
 from PIL import Image
 
 # HACK workaround for upstream pillow issue python-pillow/Pillow#400
+import sys
 from python_qt_binding import QT_BINDING_MODULES
 if (
     not QT_BINDING_MODULES['QtCore'].__name__.startswith('PyQt5') and
@@ -40,17 +41,19 @@ if (
 ):
     sys.modules['PyQt5'] = None
 
-from python_qt_binding.QtGui import QPixmap
-from python_qt_binding.QtWidgets import QGraphicsScene, QGraphicsView
-
 from rqt_bag import TopicMessageView
 from rqt_bag_plugins import image_helper
 from rqt_bag_plugins.image_qt import ImageQt
 
+from python_qt_binding.QtGui import QPixmap
+from python_qt_binding.QtWidgets import QGraphicsScene, QGraphicsView
+
 
 class ImageView(TopicMessageView):
-    """Popup image viewer."""
 
+    """
+    Popup image viewer
+    """
     name = 'Image'
 
     def __init__(self, timeline, parent, topic):
@@ -81,7 +84,9 @@ class ImageView(TopicMessageView):
         self.put_image_into_scene()
 
     def message_viewed(self, *, entry, ros_message, msg_type_name, topic, **kwargs):
-        """Refresh the image."""
+        """
+        refreshes the image
+        """
         TopicMessageView.message_viewed(self, entry=entry)
         self.set_image(ros_message, msg_type_name, topic, ros_message.header.stamp)
 
@@ -106,7 +111,7 @@ class ImageView(TopicMessageView):
             self._scene.addPixmap(pixmap)
 
     def set_image(self, image_msg, image_type, image_topic, image_stamp):
-        if image_type in ('sensor_msgs/msg/Image', 'sensor_msgs/msg/CompressedImage'):
+        if image_type == "sensor_msgs/msg/Image" or image_type == "sensor_msgs/msg/CompressedImage":
             self._image_msg = image_msg
             self._image = image_helper.imgmsg_to_pil(image_msg, image_type)
             self._image_topic = image_topic

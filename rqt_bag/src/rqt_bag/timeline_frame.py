@@ -26,22 +26,20 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import bisect
-import threading
-from typing import Callable, Iterable, Optional, Union
+from rclpy.time import Time
+from rclpy.duration import Duration
 
 from python_qt_binding.QtCore import qDebug, QPointF, QRectF, Qt, qWarning, Slot
-from python_qt_binding.QtGui import QBrush, QColor, QCursor, QFont, \
-    QFontMetrics, QPalette, QPen, QPolygonF
-from python_qt_binding.QtWidgets import QCheckBox, QGraphicsItem
+from python_qt_binding.QtGui import QBrush, QCursor, QColor, QFont, \
+    QFontMetrics, QPen, QPolygonF, QPalette
+from python_qt_binding.QtWidgets import QGraphicsItem, QCheckBox
 
-from rclpy.duration import Duration
-from rclpy.time import Time
-
-from rqt_bag import bag_helper
+import bisect
+import threading
 
 from .index_cache_thread import IndexCacheThread
 from .plugins.raw_view import RawView
+from rqt_bag import bag_helper
 from .timeline_menu import TimelinePopupMenu
 
 
@@ -61,9 +59,9 @@ class TopicPublishCheckBox(QCheckBox):
 
 
 class _SelectionMode(object):
-    """
-    SelectionMode states consolidated for readability.
 
+    """
+    SelectionMode states consolidated for readability
     NONE = no region marked or started
     LEFT_MARKED = one end of the region has been marked
     MARKED = both ends of the region have been marked
@@ -71,7 +69,6 @@ class _SelectionMode(object):
     MOVE_LEFT = region is marked; currently changing the left boundry of the selected region
     MOVE_RIGHT = region is marked; currently changing the right boundry of the selected region
     """
-
     NONE = 'none'
     LEFT_MARKED = 'left marked'
     MARKED = 'marked'
@@ -81,9 +78,9 @@ class _SelectionMode(object):
 
 
 class TimelineFrame(QGraphicsItem):
-    """
-    TimelineFrame Draws the framing elements for the bag messages.
 
+    """
+    TimelineFrame Draws the framing elements for the bag messages
     (time delimiters, labels, topic names and backgrounds).
     Also handles mouse callbacks since they interact closely with the drawn elements
     """
@@ -142,7 +139,7 @@ class TimelineFrame(QGraphicsItem):
         # or publishing box
         self._topic_name_spacing = 3
         self._topic_font_size = 10
-        self._topic_font = QFont('cairo')
+        self._topic_font = QFont("cairo")
         self._topic_font.setPointSize(self._topic_font_size)
         self._topic_font.setBold(False)
         self._topic_vertical_padding = 4
@@ -155,7 +152,7 @@ class TimelineFrame(QGraphicsItem):
         self._time_tick_height = 5
         self._time_font_height = None
         self._time_font_size = 10
-        self._time_font = QFont('cairo')
+        self._time_font = QFont("cairo")
         self._time_font.setPointSize(self._time_font_size)
         self._time_font.setBold(False)
 
@@ -223,8 +220,8 @@ class TimelineFrame(QGraphicsItem):
 
     def _set_playhead(self, playhead):
         """
-        Set the playhead to new position, notify threads, and update the scene so it will redraw.
-
+        Sets the playhead to the new position, notifies the threads and updates the scene
+        so it will redraw
         :signal: emits status_bar_changed_signal if the playhead is successfully set
         :param playhead: Time to set the playhead to, ''rclpy.time.Time()''
         """
@@ -291,7 +288,7 @@ class TimelineFrame(QGraphicsItem):
 
     def emit_play_region(self):
         play_region = self.play_region
-        if play_region[0] is not None and play_region[1] is not None:
+        if(play_region[0] is not None and play_region[1] is not None):
             self.scene().selected_region_changed.emit(*play_region)
 
     @property
@@ -330,10 +327,14 @@ class TimelineFrame(QGraphicsItem):
         return QFontMetrics(self._topic_font).width(name)
 
     def _trimmed_topic_name(self, topic_name):
-        """Trim the topic name down to a reasonable percentage of the viewable scene area."""
+        """
+        This function trims the topic name down to a reasonable percentage of the viewable scene
+        area
+        """
         allowed_width = self._scene_width * (self._topic_name_max_percent / 100.0)
-        allowed_width = (allowed_width - self._topic_name_spacing - self._margin_left -
-                         self._topic_publishing_box_size - self._topic_name_spacing)
+        allowed_width = (allowed_width
+            - self._topic_name_spacing - self._margin_left
+            - self._topic_publishing_box_size - self._topic_name_spacing)
         trimmed_return = topic_name
         if allowed_width < self._qfont_width(topic_name):
             #  We need to trim the topic
@@ -366,7 +367,9 @@ class TimelineFrame(QGraphicsItem):
         return trimmed_return
 
     def _layout(self):
-        """Recalculate layout of timeline to take into account any changes that have occured."""
+        """
+        Recalculate the layout of the timeline to take into account any changes that have occured.
+        """
         # Calculate history left and history width
         self._scene_width = self.scene().views()[0].size().width()
 
@@ -385,8 +388,7 @@ class TimelineFrame(QGraphicsItem):
 
         # Update the timeline boundries
         new_history_left = (self._margin_left + self._topic_publishing_box_size +
-                            self._topic_name_spacing + max_topic_name_width +
-                            self._topic_name_spacing)
+            self._topic_name_spacing + max_topic_name_width + self._topic_name_spacing)
         new_history_width = self._scene_width - new_history_left - self._margin_right
         self._history_left = new_history_left
         self._history_width = new_history_width
@@ -405,8 +407,7 @@ class TimelineFrame(QGraphicsItem):
             if not topic_height:
                 topic_height = self._topic_font_height + self._topic_vertical_padding
 
-            self._history_bounds[topic] = (self._history_left, y,
-                                           self._history_width, topic_height)
+            self._history_bounds[topic] = (self._history_left, y, self._history_width, topic_height)
 
             y += topic_height
 
@@ -416,8 +417,7 @@ class TimelineFrame(QGraphicsItem):
 
     def _draw_topic_histories(self, painter):
         """
-        Draw all topic messages.
-
+        Draw all topic messages
         :param painter: allows access to paint functions,''QPainter''
         """
         for topic in sorted(self._history_bounds.keys()):
@@ -426,7 +426,6 @@ class TimelineFrame(QGraphicsItem):
     def _draw_topic_history(self, painter, topic):
         """
         Draw boxes corresponding to message regions on the timeline.
-
         :param painter: allows access to paint functions,''QPainter''
         :param topic: the topic for which message boxes should be drawn, ''str''
         """
@@ -518,7 +517,6 @@ class TimelineFrame(QGraphicsItem):
     def _draw_bag_ends(self, painter):
         """
         Draw markers to indicate the area the bag file represents within the current visible area.
-
         :param painter: allows access to paint functions,''QPainter''
         """
         x_start = self.map_stamp_to_x(bag_helper.to_sec(self._start_stamp))
@@ -533,8 +531,7 @@ class TimelineFrame(QGraphicsItem):
 
     def _draw_topic_dividers(self, painter):
         """
-        Draw horizontal lines between each topic to visually separate the messages.
-
+        Draws horizontal lines between each topic to visually separate the messages
         :param painter: allows access to paint functions,''QPainter''
         """
         clip_left = self._history_left
@@ -558,8 +555,7 @@ class TimelineFrame(QGraphicsItem):
 
     def _draw_selected_region(self, painter):
         """
-        Draw a box around the selected region.
-
+        Draws a box around the selected region
         :param painter: allows access to paint functions,''QPainter''
         """
         if self._selected_left is None:
@@ -598,8 +594,7 @@ class TimelineFrame(QGraphicsItem):
 
     def _draw_playhead(self, painter):
         """
-        Draw a line and 2 triangles to denote the current position being viewed.
-
+        Draw a line and 2 triangles to denote the current position being viewed
         :param painter: ,''QPainter''
         """
         px = self.map_stamp_to_x(bag_helper.to_sec(self.playhead))
@@ -625,8 +620,7 @@ class TimelineFrame(QGraphicsItem):
 
     def _draw_history_border(self, painter):
         """
-        Draw a simple black rectangle frame around the timeline view area.
-
+        Draw a simple black rectangle frame around the timeline view area
         :param painter: ,''QPainter''
         """
         bounds_width = min(self._history_width, self.scene().width())
@@ -641,8 +635,7 @@ class TimelineFrame(QGraphicsItem):
 
     def _draw_topic_names(self, painter):
         """
-        Calculate positions of existing topic names and draw them on the left, one for each row.
-
+        Calculate positions of existing topic names and draw them on the left, one for each row
         :param painter: allows access to pain functions,''QPainter''
         """
         for topic, bounds in self._history_bounds.items():
@@ -693,7 +686,6 @@ class TimelineFrame(QGraphicsItem):
     def _draw_time_divisions(self, painter):
         """
         Draw vertical grid-lines showing major and minor time divisions.
-
         :param painter: allows access to paint functions,''QPainter''
         """
         x_per_sec = self.map_dstamp_to_dx(1.0)
@@ -723,7 +715,6 @@ class TimelineFrame(QGraphicsItem):
     def _draw_major_divisions(self, painter, stamps, start_stamp, division):
         """
         Draw black hashed vertical grid-lines showing major time divisions.
-
         :param painter: allows access to paint functions,''QPainter''
         """
         label_y = self._history_top - self._playhead_pointer_size[1] - 5
@@ -740,8 +731,7 @@ class TimelineFrame(QGraphicsItem):
 
             painter.setPen(self._major_division_pen)
             painter.drawLine(
-                x, label_y - self._time_tick_height - self._time_font_size,
-                x, self._history_bottom)
+                x, label_y - self._time_tick_height - self._time_font_size, x, self._history_bottom)
 
         painter.setBrush(self._default_brush)
         painter.setPen(self._default_pen)
@@ -749,7 +739,6 @@ class TimelineFrame(QGraphicsItem):
     def _draw_minor_divisions(self, painter, stamps, start_stamp, division):
         """
         Draw grey hashed vertical grid-lines showing minor time divisions.
-
         :param painter: allows access to paint functions,''QPainter''
         """
         xs = [self.map_stamp_to_x(stamp) for stamp in stamps]
@@ -834,8 +823,6 @@ class TimelineFrame(QGraphicsItem):
 
     def get_renderers(self):
         """
-        Get the list of currently loaded renderers.
-
         :returns: a list of the currently loaded renderers for the plugins
         """
         renderers = []
@@ -871,57 +858,48 @@ class TimelineFrame(QGraphicsItem):
 
     # Index Caching functions
 
-    def _update_index_cache(self, topic: Optional[Union[str, Iterable[str]]],
-                            progress_cb: Optional[Callable[[int], None]] = None) -> int:
+    def _update_index_cache(self, topic):
         """
-        Update the cache of message timestamps for the given topic(s).
-
-        :param topic: topic or list of topics to update the cache for, ''list(str)''
-        :param progress_cb: callback function to report progress, called once per each percent.
+        Updates the cache of message timestamps for the given topic.
         :return: number of messages added to the index cache
         """
         if self._start_stamp is None or self._end_stamp is None:
             return 0
 
-        if isinstance(topic, Iterable) and not isinstance(topic, str):
-            topics = [t for t in topic if t in self.invalidated_caches]
-            if len(topics) == 0:
-                return 0
+        if topic not in self.index_cache:
+            # Don't have any cache of messages in this topic
+            start_time = self._start_stamp
+            topic_cache = []
+            self.index_cache[topic] = topic_cache
         else:
+            topic_cache = self.index_cache[topic]
+
+            # Check if the cache has been invalidated
             if topic not in self.invalidated_caches:
                 return 0
-            topics = [topic]
 
-        start_time = self._start_stamp
-        for t in topics:
-            if t not in self.index_cache:
-                # Don't have any cache of messages in this topic
-                topic_cache = []
-                self.index_cache[t] = topic_cache
+            if len(topic_cache) == 0:
+                start_time = self._start_stamp
             else:
-                topic_cache = self.index_cache[t]
-                if len(topic_cache) > 0:
-                    start_time = min(start_time, Time(seconds=max(0.0, topic_cache[-1])))
+                start_time = Time(seconds=max(0.0, topic_cache[-1]))
 
         end_time = self._end_stamp
 
-        newly_added = 0
-        for entry in self.scene().get_entries(topics, start_time, end_time, progress_cb):
-            topic_cache = self.index_cache[entry.topic]
+        topic_cache_len = len(topic_cache)
+
+        for entry in self.scene().get_entries([topic], start_time, end_time):
             topic_cache.append(bag_helper.to_sec(Time(nanoseconds=entry.timestamp)))
-            newly_added += 1
 
-        for t in topics:
-            if t in self.invalidated_caches:
-                self.invalidated_caches.remove(t)
+        if topic in self.invalidated_caches:
+            self.invalidated_caches.remove(topic)
 
-        return newly_added
+        return len(topic_cache) - topic_cache_len
+
 
     def cache_message(self, topic, t):
         """
-        Update the cache of message timestamps with a specific new message.
-
-        This bypasses any need to read entries from the bag.
+        Updates the cache of message timestamps with a specific new message,
+        bypassing any need to read entries from the bag.
         """
         if self._start_stamp is None or self._end_stamp is None:
             return 0
@@ -929,10 +907,10 @@ class TimelineFrame(QGraphicsItem):
         topic_cache = self.index_cache.setdefault(topic, [])
         topic_cache.append(bag_helper.to_sec(t))
 
+
     def _find_regions(self, stamps, max_interval):
         """
-        Group timestamps into regions connected by timestamps less than max_interval secs apart.
-
+        Group timestamps into regions connected by timestamps less than max_interval secs apart
         :param start_stamp: a list of stamps, ''list''
         :param stamp_step: seconds between each division, ''int''
         """
@@ -953,8 +931,7 @@ class TimelineFrame(QGraphicsItem):
 
     def _get_stamps(self, start_stamp, stamp_step):
         """
-        Generate visible stamps every stamp_step.
-
+        Generate visible stamps every stamp_step
         :param start_stamp: beginning of timeline stamp, ''int''
         :param stamp_step: seconds between each division, ''int''
         """
@@ -970,8 +947,6 @@ class TimelineFrame(QGraphicsItem):
 
     def _get_label(self, division, elapsed):
         """
-        Get the label for a division and time elapsed.
-
         :param division: number of seconds in a division, ''int''
         :param elapsed: seconds from the beginning, ''int''
         :returns: relevent time elapsed string, ''str''
@@ -1003,8 +978,7 @@ class TimelineFrame(QGraphicsItem):
     # Pixel location/time conversion functions
     def map_x_to_stamp(self, x, clamp_to_visible=True):
         """
-        Convert a pixel x value to a stamp.
-
+        converts a pixel x value to a stamp
         :param x: pixel value to be converted, ''int''
         :param clamp_to_visible:
             disallow values that are greater than the current timeline bounds,''bool''
@@ -1014,16 +988,15 @@ class TimelineFrame(QGraphicsItem):
 
         if clamp_to_visible:
             if fraction <= 0.0:
-                return self._stamp_left
+                return int(self._stamp_left)
             elif fraction >= 1.0:
-                return self._stamp_right
+                return int(self._stamp_right)
 
-        return self._stamp_left + fraction * (self._stamp_right - self._stamp_left)
+        return int(self._stamp_left + fraction * (self._stamp_right - self._stamp_left))
 
     def map_dx_to_dstamp(self, dx):
         """
-        Convert a distance in pixel space to a distance in stamp space.
-
+        converts a distance in pixel space to a distance in stamp space
         :param dx: distance in pixel space to be converted, ''int''
         :returns: distance in stamp space, ''float''
         """
@@ -1031,8 +1004,7 @@ class TimelineFrame(QGraphicsItem):
 
     def map_stamp_to_x(self, stamp, clamp_to_visible=True):
         """
-        Convert a timestamp to the x value where that stamp exists in the timeline.
-
+        converts a timestamp to the x value where that stamp exists in the timeline
         :param stamp: timestamp to be converted, ''int''
         :param clamp_to_visible:
             disallow values that are greater than the current timeline bounds,''bool''
@@ -1145,8 +1117,6 @@ class TimelineFrame(QGraphicsItem):
 
     def get_zoom_interval(self, zoom, center=None):
         """
-        Get the zoom interval.
-
         @rtype: tuple
         @requires: left & right zoom interval sizes.
         """
@@ -1297,9 +1267,8 @@ class TimelineFrame(QGraphicsItem):
 
                 if dx_drag != 0:
                     self.translate_timeline(-self.map_dx_to_dstamp(dx_drag))
-                dy_drag_only = dx_drag == 0 and abs(dy_drag) > 0
-                all_drg = dx_drag != 0 and abs(float(dy_drag) / dx_drag) > 0.2 and abs(dy_drag) > 1
-                if dy_drag_only or all_drg:
+                if (dx_drag == 0 and abs(dy_drag) > 0) or \
+                        (dx_drag != 0 and abs(float(dy_drag) / dx_drag) > 0.2 and abs(dy_drag) > 1):
                     zoom = min(
                         self._max_zoom_speed,
                         max(self._min_zoom_speed, 1.0 + self._zoom_sensitivity * dy_drag))
