@@ -1,0 +1,12 @@
+Source: ros-rolling-rqt-bag-plugins
+Section: misc
+Priority: optional
+Maintainer: Chris Lalancette <clalancette@gmail.com>
+Build-Depends: debhelper (>= 9.0.0), python3-pytest <!nocheck>, ros-rolling-ament-copyright <!nocheck>, ros-rolling-ament-flake8 <!nocheck>, ros-rolling-ament-pep257 <!nocheck>, ros-rolling-ament-xmllint <!nocheck>, ros-rolling-ros-workspace, python3-all, python3-setuptools, dh-python
+Homepage: http://wiki.ros.org/rqt_bag
+Standards-Version: 3.9.2
+
+Package: ros-rolling-rqt-bag-plugins
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, python3-cairo, python3-numpy, python3-pil, ros-rolling-ament-index-python, ros-rolling-builtin-interfaces, ros-rolling-geometry-msgs, ros-rolling-rclpy, ros-rolling-rosbag2, ros-rolling-rqt-bag, ros-rolling-rqt-gui, ros-rolling-rqt-gui-py, ros-rolling-rqt-plot, ros-rolling-sensor-msgs, ros-rolling-std-msgs, ros-rolling-ros-workspace
+Description: rqt_bag provides a GUI plugin for displaying and replaying ROS bag files.
