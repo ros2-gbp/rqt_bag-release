@@ -26,36 +26,42 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import rosbag2_py
-import time
 import threading
-
+import time
+from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
 
 from python_qt_binding.QtCore import qDebug, Qt, QTimer, qWarning, Signal
 from python_qt_binding.QtWidgets import QGraphicsScene, QMessageBox
 
-from rqt_bag import bag_helper
 from rclpy.duration import Duration
 from rclpy.time import Time
 
-from .timeline_frame import TimelineFrame
+import rosbag2_py
+
+from rqt_bag import bag_helper
+
 from .message_listener_thread import MessageListenerThread
 from .message_loader_thread import MessageLoaderThread
 from .player import Player
 from .recorder import Recorder
+from .rosbag2 import Entry, Rosbag2
+from .timeline_frame import TimelineFrame
 
 
 class BagTimeline(QGraphicsScene):
+    """
+    BagTimeline contains bag files, and all info required to display the bag data on the screen.
 
+    It also handles related events.
     """
-    BagTimeline contains bag files, all information required to display the bag data visualization
-    on the screen Also handles events
-    """
+
     status_bar_changed_signal = Signal()
     selected_region_changed = Signal(Time, Time)
 
     def __init__(self, context, publish_clock):
         """
+        Construct a BagTimeline object.
+
         :param context:
             plugin context hook to enable adding rqt_bag plugin widgets as ROS_GUI snapin panes,
             ''PluginContext''
@@ -63,6 +69,7 @@ class BagTimeline(QGraphicsScene):
         super(BagTimeline, self).__init__()
         self._bags = []
         self._bag_lock = threading.RLock()
+        self._bags_size = 0
 
         self.background_task = None  # Display string
         self.background_task_cancel = False
@@ -115,6 +122,8 @@ class BagTimeline(QGraphicsScene):
 
     def get_context(self):
         """
+        Get the gui context.
+
         :returns: the ROS_GUI context, 'PluginContext'
         """
         return self._context
@@ -124,9 +133,7 @@ class BagTimeline(QGraphicsScene):
             self._recorder.stop()
 
     def handle_close(self):
-        """
-        Cleans up the timeline, bag and any threads
-        """
+        """Clean up the timeline, bag and any threads."""
         if self.__closed:
             return
         else:
@@ -148,11 +155,13 @@ class BagTimeline(QGraphicsScene):
     # Bag Management and access
     def add_bag(self, bag):
         """
-        creates an indexing thread for each new topic in the bag
-        fixes the boarders and notifies the indexing thread to index the new items bags
+        Create an indexing thread for each new topic in the bag.
+
+        Fixes the boarders and notifies the indexing thread to index the new items bags.
         :param bag: ros bag file, ''rosbag2.bag''
         """
         self._bags.append(bag)
+        self._bags_size += bag.size()
 
         bag_topics = bag.get_topics()
         qDebug('Topics from this bag: {}'.format(bag_topics))
@@ -182,12 +191,13 @@ class BagTimeline(QGraphicsScene):
             self._timeline_frame.index_cache_cv.notify()
 
     def file_size(self):
-        with self._bag_lock:
-            return sum(b.size() for b in self._bags)
+        return self._bags_size
 
     # TODO Rethink API and if these need to be visible
     def _get_start_stamp(self):
         """
+        Get the first stamp in the bags.
+
         :return: first stamp in the bags, ''rclpy.time.Time''
         """
         with self._bag_lock:
@@ -201,6 +211,8 @@ class BagTimeline(QGraphicsScene):
 
     def _get_end_stamp(self):
         """
+        Get the last stamp in the bags.
+
         :return: last stamp in the bags, ''rclpy.time.Time''
         """
         with self._bag_lock:
@@ -213,6 +225,8 @@ class BagTimeline(QGraphicsScene):
 
     def _get_topics(self):
         """
+        Get a sorted list of topic names.
+
         :return: sorted list of topic names, ''list(str)''
         """
         with self._bag_lock:
@@ -224,6 +238,8 @@ class BagTimeline(QGraphicsScene):
 
     def _get_topics_by_datatype(self):
         """
+        Get a dict of topics by datatype.
+
         :return: dict of list of topics for each datatype, ''dict(datatype:list(topic))''
         """
         with self._bag_lock:
@@ -235,6 +251,8 @@ class BagTimeline(QGraphicsScene):
 
     def get_datatype(self, topic):
         """
+        Get the datatype for a topic.
+
         :return: datatype associated with a topic, ''str''
         :raises: if there are multiple datatypes assigned to a single topic, ''Exception''
         """
@@ -249,46 +267,37 @@ class BagTimeline(QGraphicsScene):
                     datatype = bag_datatype
             return datatype
 
-    def get_entries(self, topics, start_stamp, end_stamp):
+    def get_entries(self, topics: Optional[Union[str, Iterable[str]]],
+                    start_stamp: Time, end_stamp: Time,
+                    progress_cb: Optional[Callable[[int], None]] = None) -> Iterator[Entry]:
         """
-        generator function for bag entries
+        Get a generator for bag entries.
+
         :param topics: list of topics to query, ''list(str)''
         :param start_stamp: stamp to start at, ''rclpy.time.Time''
-        :param end_stamp: stamp to end at, ''rclpy.time,Time''
+        :param end_stamp: stamp to end at, ''rclpy.time.Time''
+        :param progress_cb: callback function to report progress, called once per each percent.
         :returns: entries the bag file, ''msg''
         """
-        with self._bag_lock:
-            bag_entries = []
-            for b in self._bags:
-                bag_start_time = b.get_earliest_timestamp()
-                if bag_start_time is not None and bag_start_time > end_stamp:
-                    continue
+        for b, entry in self.get_entries_with_bags(topics, start_stamp, end_stamp, progress_cb):
+            yield entry
+        return None
 
-                bag_end_time = b.get_latest_timestamp()
-                if bag_end_time is not None and bag_end_time < start_stamp:
-                    continue
-
-                # Get all of the entries for each topic. When opening multiple
-                # bags, the requested topic may not be in a given bag database
-                for topic in topics:
-                    entries = b.get_entries_in_range(start_stamp, end_stamp, topic)
-                    if entries is not None:
-                        bag_entries.extend(entries)
-
-            for entry in sorted(bag_entries, key=lambda entry: entry.timestamp):
-                yield entry
-
-    def get_entries_with_bags(self, topic, start_stamp, end_stamp):
+    def get_entries_with_bags(self, topics: Optional[Union[str, Iterable[str]]],
+                              start_stamp: Time, end_stamp: Time,
+                              progress_cb: Optional[Callable[[int], None]] = None) \
+            -> Iterator[Tuple[Rosbag2, Entry]]:
         """
-        generator function for bag entries
-        :param topics: list of topics to query, ''list(str)''
+        Get a generator of bag entries.
+
+        :param topics: list of topics to query (if None, all topics are used), ''list(str)''
         :param start_stamp: stamp to start at, ''rclpy.time.Time''
-        :param end_stamp: stamp to end at, ''rclpy.time,Time''
-        :returns: tuple of (bag, entry) for the entries in the bag file, ''(rosbag2.bag, msg)''
+        :param end_stamp: stamp to end at, ''rclpy.time.Time''
+        :param progress_cb: callback function to report progress, called once per each percent.
+        :returns: tuple of (bag, entry) for the entries in the bag file, ''(rosbag2.Rosbag2, msg)''
         """
         with self._bag_lock:
-            bag_entries = []
-            bag_by_iter = {}
+            relevant_bags = []
             for b in self._bags:
                 bag_start_time = b.get_earliest_timestamp()
                 if bag_start_time is not None and bag_start_time > end_stamp:
@@ -298,15 +307,66 @@ class BagTimeline(QGraphicsScene):
                 if bag_end_time is not None and bag_end_time < start_stamp:
                     continue
 
-                for entry in b.get_entries_in_range(start_stamp, end_stamp):
-                    bag_entries.append((b, entry))
+                relevant_bags.append(b)
 
-            for bag, entry in sorted(bag_entries, key=lambda item: item[1].timestamp):
-                yield bag, entry
+            generators = {}
+            last_entries = {}
+            for b in relevant_bags:
+                generators[b] = b.entries_in_range_generator(start_stamp, end_stamp, topics)
+                try:
+                    last_entries[b] = next(generators[b])
+                except StopIteration:
+                    last_entries[b] = None
+
+            to_delete = []
+            for b in last_entries:
+                if last_entries[b] is None:
+                    to_delete.append(b)
+
+            for b in to_delete:
+                del last_entries[b]
+                del generators[b]
+                relevant_bags.remove(b)
+
+            if progress_cb is not None:
+                progress = 0
+                num_entries = 0
+                estimated_num_entries = 0
+                for b in relevant_bags:
+                    estimated_num_entries += b.estimate_num_entries_in_range(
+                        start_stamp, end_stamp, topics)
+
+            while any(last_entries.values()):
+                min_bag = None
+                min_entry = None
+                for b, entry in last_entries.items():
+                    if entry is not None:
+                        if min_entry is None or entry.timestamp < min_entry.timestamp:
+                            min_bag = b
+                            min_entry = entry
+                if min_bag is None:
+                    return
+
+                if progress_cb is not None:
+                    num_entries += 1
+                    new_progress = int(100.0 * (float(num_entries) / estimated_num_entries))
+                    if new_progress != progress:
+                        progress_cb(new_progress)
+                        progress = new_progress
+
+                yield min_bag, min_entry
+
+                try:
+                    last_entries[min_bag] = next(generators[min_bag])
+                except StopIteration:
+                    last_entries[min_bag] = None
+
+        return
 
     def get_entry(self, t, topic):
         """
-        Access a bag entry
+        Access a bag entry.
+
         :param t: time, ''rclpy.time.Time''
         :param topic: the topic to be accessed, ''str''
         :return: tuple of (bag, entry) corresponding to time t and topic, ''(rosbag2.bag, msg)''
@@ -322,7 +382,8 @@ class BagTimeline(QGraphicsScene):
 
     def get_entry_before(self, t):
         """
-        Access a bag entry
+        Access a bag entry.
+
         :param t: time, ''rclpy.time.Time''
         :return: tuple of (bag, entry) corresponding to time t, ''(rosbag2.bag, msg)''
         """
@@ -337,7 +398,8 @@ class BagTimeline(QGraphicsScene):
 
     def get_entry_after(self, t, topic=None):
         """
-        Access a bag entry
+        Access a bag entry.
+
         :param t: time, ''rclpy.time.Time''
         :return: tuple of (bag, entry) corresponding to time t, ''(rosbag2.bag, msg)''
         """
@@ -352,6 +414,8 @@ class BagTimeline(QGraphicsScene):
 
     def get_next_message_time(self):
         """
+        Get the time of the next message.
+
         :return: time of the next message after the current playhead position,''rclpy.time.Time''
         """
         if self._timeline_frame.playhead is None:
@@ -365,6 +429,8 @@ class BagTimeline(QGraphicsScene):
 
     def get_previous_message_time(self):
         """
+        Get the time of the previous message.
+
         :return: time of the next message before the current playhead position,''rclpy.time.Time''
         """
         if self._timeline_frame.playhead is None:
@@ -384,7 +450,8 @@ class BagTimeline(QGraphicsScene):
 
     def start_background_task(self, background_task):
         """
-        Verify that a background task is not currently running before starting a new one
+        Verify that a background task is not currently running before starting a new one.
+
         :param background_task: name of the background task, ''str''
         """
         if self.background_task is not None:
@@ -408,7 +475,8 @@ class BagTimeline(QGraphicsScene):
 
     def _export_region(self, path, topics, start_stamp, end_stamp):
         """
-        Starts a thread to save the current selection to a new bag file
+        Start a thread to save the current selection to a new bag file.
+
         :param path: filesystem path to write to, ''str''
         :param topics: topics to write to the file, ''list(str)''
         :param start_stamp: start of area to save, ''rclpy.time.Time''
@@ -427,7 +495,8 @@ class BagTimeline(QGraphicsScene):
 
         # If no messages, prompt the user and return
         if total_messages == 0:
-            QMessageBox(QMessageBox.Warning, 'rqt_bag', 'No messages found', QMessageBox.Ok).exec_()
+            QMessageBox(QMessageBox.Warning, 'rqt_bag', 'No messages found',
+                        QMessageBox.Ok).exec_()
             self.stop_background_task()
             return
 
@@ -450,12 +519,15 @@ class BagTimeline(QGraphicsScene):
         # Run copying in a background thread
         self._export_thread = threading.Thread(
             target=self._run_export_region,
-            args=(rosbag_writer, topics, start_stamp, end_stamp, bag_entries, path, self.serialization_format))
+            args=(rosbag_writer, topics, start_stamp, end_stamp, bag_entries, path,
+                  self.serialization_format))
         self._export_thread.start()
 
-    def _run_export_region(self, rosbag_writer, topics, start_stamp, end_stamp, bag_entries, export_filename, serialization_format):
+    def _run_export_region(self, rosbag_writer, topics, start_stamp, end_stamp, bag_entries,
+                           export_filename, serialization_format):
         """
-        Threaded function that saves the current selection to a new bag file
+        Threaded function that saves the current selection to a new bag file.
+
         :param export_bag: bagfile to write to, ''rosbag.bag''
         :param topics: topics to write to the file, ''list(str)''
         :param start_stamp: start of area to save, ''rclpy.time.Time''
@@ -589,9 +661,7 @@ class BagTimeline(QGraphicsScene):
         self._step_playhead()
 
     def _step_playhead(self):
-        """
-        moves the playhead to the next position based on the desired position
-        """
+        """Move the playhead to the next position based on the desired position."""
         # Reset when the playing mode switches. A rclpy.time.Time cannot be compared to a NoneType
         if self.last_playhead is None or self._timeline_frame.playhead != self.last_playhead:
             self.last_frame = None
@@ -604,9 +674,7 @@ class BagTimeline(QGraphicsScene):
             self.step_fixed()
 
     def step_fixed(self):
-        """
-        Moves the playhead a fixed distance into the future based on the current play speed
-        """
+        """Move the playhead a fixed distance into the future based on the current play speed."""
         if self.play_speed == 0.0 or not self._timeline_frame.playhead:
             self.last_frame = None
             self.last_playhead = None
@@ -651,9 +719,7 @@ class BagTimeline(QGraphicsScene):
         self.last_playhead = self._timeline_frame.playhead
 
     def step_next_message(self):
-        """
-        Move the playhead to the next message
-        """
+        """Move the playhead to the next message."""
         if self.play_speed <= 0.0 or not self._timeline_frame.playhead:
             self.last_frame = None
             self.last_playhead = None
@@ -729,7 +795,7 @@ class BagTimeline(QGraphicsScene):
                 try:
                     listener.timeline_changed()
                 except Exception as ex:
-                    qWarning('Error calling timeline_changed on %s: %s' % (type(listener), str(ex)))
+                    qWarning(f'Error calling timeline_changed on {type(listener)}: {str(ex)}')
 
         # Dynamically resize the timeline, if necessary, to make visible any new messages
         # that might otherwise have exceeded the bounds of the window

@@ -2,48 +2,41 @@
 Changelog for package rqt_bag_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.5.5 (2025-08-06)
-------------------
-* Display roll, pitch, yaw values for quaternions (backport `#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_) (`#199 <https://github.com/ros-visualization/rqt_bag/issues/199>`_)
-  * Display roll, pitch, yaw values for quaternions (`#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_)
-  (cherry picked from commit 4593d82d2b23a322119c6a518befec970db7d54e)
-* Fixed image helper and added support for PNG-coded compressedDepth (backport `#176 <https://github.com/ros-visualization/rqt_bag/issues/176>`_)  (`#196 <https://github.com/ros-visualization/rqt_bag/issues/196>`_)
-* Improve plot view (backport `#174 <https://github.com/ros-visualization/rqt_bag/issues/174>`_) (`#195 <https://github.com/ros-visualization/rqt_bag/issues/195>`_)
-* plot_view: Fixed display of initial message (backport `#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_) (`#187 <https://github.com/ros-visualization/rqt_bag/issues/187>`_)
-  plot_view: Fixed display of initial message (`#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_)
-  (cherry picked from commit 9ff337266e97143c2ec9eef6f9aa03bde2b31997)
-  Co-authored-by: Martin Pecka <peci1@seznam.cz>
-* Contributors: Martin Pecka, mergify[bot]
-
-1.5.4 (2024-09-06)
+2.2.1 (2025-11-24)
 ------------------
 
-1.5.3 (2024-05-14)
+2.2.0 (2025-07-30)
 ------------------
-* Adapted to rosbag2_py (backport `#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_) (`#165 <https://github.com/ros-visualization/rqt_bag/issues/165>`_)
-  Adapted to rosbag2_py (`#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_)
-  * Switch to an in-built ImageQt class.
-  That's because in newer versions of PIL, they skip over
-  PyQt5 support even though it works.
-  * Update for new rosbag2_py API.
-  * Fix TopicMetadata call
-  * Avoid freeze the gui
-  * Fixed checkboes
-  * Update with the license from PIL.
-  Note that this is an OSI-approved license, even though
-  it is technically deprecated by
-  OSI: https://opensource.org/license/historical-php
-  * Only change the checkbox when needed.
-  Otherwise, we end up with endless paint() calls which
-  hammer the CPU.
-  * A few small fixes for PIL.
-  (cherry picked from commit e7879325f075c9d6749a4324618691933727574c)
-  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
-* Fixed image timeline renderer (backport `#158 <https://github.com/ros-visualization/rqt_bag/issues/158>`_) (`#163 <https://github.com/ros-visualization/rqt_bag/issues/163>`_)
-  Fixed image timeline renderer (`#158 <https://github.com/ros-visualization/rqt_bag/issues/158>`_)
-  (cherry picked from commit a939f27f6323ba1117edaafcdc498fc982743d4f)
-  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
-* Contributors: mergify[bot]
+* Display roll, pitch, yaw values for quaternions (`#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_)
+* Fix flake8 error in setup.py (`#192 <https://github.com/ros-visualization/rqt_bag/issues/192>`_)
+* Fixed image helper and added support for PNG-coded compressedDepth (`#176 <https://github.com/ros-visualization/rqt_bag/issues/176>`_)
+* Improve plot view (`#174 <https://github.com/ros-visualization/rqt_bag/issues/174>`_)
+* plot_view: Fixed display of initial message (`#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_)
+* fix setuptools deprecations (`#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_)
+* Contributors: Martin Pecka, Michael Carlstrom, mosfet80
+
+2.1.1 (2025-07-01)
+------------------
+
+2.1.0 (2025-04-28)
+------------------
+
+2.0.2 (2025-01-07)
+------------------
+* Add standard tests for rqt_bag and rqt_bag_plugins (`#171 <https://github.com/ros-visualization/rqt_bag/issues/171>`_)
+* Contributors: Chris Lalancette
+
+2.0.1 (2024-09-04)
+------------------
+
+2.0.0 (2024-06-17)
+------------------
+* Adapted to rosbag2_py (`#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_)
+* Fixed image timeline renderer (`#158 <https://github.com/ros-visualization/rqt_bag/issues/158>`_)
+* Contributors: Alejandro Hernández Cordero
+
+1.6.0 (2024-04-26)
+------------------
 
 1.5.2 (2024-03-28)
 ------------------

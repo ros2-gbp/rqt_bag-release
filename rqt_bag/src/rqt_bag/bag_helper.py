@@ -34,7 +34,8 @@ from typing import Tuple
 
 
 def to_sec(t):
-    """Convert an rclpy.time.Time or rclpy.duration.Duration to a float representing seconds.
+    """
+    Convert an rclpy.time.Time or rclpy.duration.Duration to a float representing seconds.
 
     @param t:
     @type  t: rclpy.time.Time or rclpy.duration.Duration:
