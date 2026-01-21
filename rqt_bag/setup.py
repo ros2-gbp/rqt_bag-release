@@ -3,7 +3,7 @@ from setuptools import setup
 package_name = 'rqt_bag'
 setup(
     name=package_name,
-    version='2.2.1',
+    version='1.5.6',
     package_dir={'': 'src'},
     packages=['rqt_bag', 'rqt_bag.plugins'],
     data_files=[
@@ -30,7 +30,7 @@ setup(
     ),
     license='BSD',
     extras_require={
-        'test': [
+        'test' : [
             'pytest',
         ],
     },

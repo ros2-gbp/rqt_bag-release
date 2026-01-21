@@ -2,47 +2,60 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.2.1 (2025-11-24)
+1.5.6 (2026-01-21)
 ------------------
-* Cleanup mislabeled BSD license (`#205 <https://github.com/ros-visualization/rqt_bag/issues/205>`_)
-* Contributors: Alejandro Hernández Cordero
+* fix setuptools deprecations (backport `#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_) (`#203 <https://github.com/ros-visualization/rqt_bag/issues/203>`_)
+  fix setuptools deprecations (`#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_)
+  (cherry picked from commit 34e39bcb6455d18d0073a05797e6e1f04bbcbf7c)
+  Co-authored-by: mosfet80 <10235105+mosfet80@users.noreply.github.com>
+* Contributors: mergify[bot]
 
-2.2.0 (2025-07-30)
+1.5.5 (2025-08-06)
 ------------------
-* Better handling of large bag files (`#178 <https://github.com/ros-visualization/rqt_bag/issues/178>`_)
-* Display roll, pitch, yaw values for quaternions (`#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_)
-* Fix flake8 error in setup.py (`#192 <https://github.com/ros-visualization/rqt_bag/issues/192>`_)
-* Improved raw view to better handle arrays and time objects (`#173 <https://github.com/ros-visualization/rqt_bag/issues/173>`_)
-* plot_view: Fixed display of initial message (`#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_)
-* fix setuptools deprecations (`#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_)
-* Contributors: Martin Pecka, Michael Carlstrom, mosfet80
+* Display roll, pitch, yaw values for quaternions (backport `#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_) (`#199 <https://github.com/ros-visualization/rqt_bag/issues/199>`_)
+  * Display roll, pitch, yaw values for quaternions (`#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_)
+  (cherry picked from commit 4593d82d2b23a322119c6a518befec970db7d54e)
+* Improved raw view to better handle arrays and time objects (backport `#173 <https://github.com/ros-visualization/rqt_bag/issues/173>`_) (`#197 <https://github.com/ros-visualization/rqt_bag/issues/197>`_)
+* plot_view: Fixed display of initial message (backport `#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_) (`#187 <https://github.com/ros-visualization/rqt_bag/issues/187>`_)
+  plot_view: Fixed display of initial message (`#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_)
+  (cherry picked from commit 9ff337266e97143c2ec9eef6f9aa03bde2b31997)
+  Co-authored-by: Martin Pecka <peci1@seznam.cz>
+* Contributors: Martin Pecka, mergify[bot]
 
-2.1.1 (2025-07-01)
+1.5.4 (2024-09-06)
 ------------------
-* Fixed timeline resolution (`#175 <https://github.com/ros-visualization/rqt_bag/issues/175>`_)
-* Contributors: Martin Pecka
+* Updated player QoS (backport `#164 <https://github.com/ros-visualization/rqt_bag/issues/164>`_) (`#167 <https://github.com/ros-visualization/rqt_bag/issues/167>`_)
+  Updated player QoS (`#164 <https://github.com/ros-visualization/rqt_bag/issues/164>`_)
+  (cherry picked from commit 4a9a69617e439140771a2b292aaa4aa93a213a03)
+  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
+* Contributors: mergify[bot]
 
-2.1.0 (2025-04-28)
+1.5.3 (2024-05-14)
 ------------------
-
-2.0.2 (2025-01-07)
-------------------
-* Add standard tests for rqt_bag and rqt_bag_plugins (`#171 <https://github.com/ros-visualization/rqt_bag/issues/171>`_)
-* Contributors: Chris Lalancette
-
-2.0.1 (2024-09-04)
-------------------
-* Updated player QoS (`#164 <https://github.com/ros-visualization/rqt_bag/issues/164>`_)
-* Contributors: Alejandro Hernández Cordero
-
-2.0.0 (2024-06-17)
-------------------
-* Adapted to rosbag2_py (`#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_)
-* Fixed button icons (`#159 <https://github.com/ros-visualization/rqt_bag/issues/159>`_)
-* Contributors: Alejandro Hernández Cordero
-
-1.6.0 (2024-04-26)
-------------------
+* Adapted to rosbag2_py (backport `#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_) (`#165 <https://github.com/ros-visualization/rqt_bag/issues/165>`_)
+  Adapted to rosbag2_py (`#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_)
+  * Switch to an in-built ImageQt class.
+  That's because in newer versions of PIL, they skip over
+  PyQt5 support even though it works.
+  * Update for new rosbag2_py API.
+  * Fix TopicMetadata call
+  * Avoid freeze the gui
+  * Fixed checkboes
+  * Update with the license from PIL.
+  Note that this is an OSI-approved license, even though
+  it is technically deprecated by
+  OSI: https://opensource.org/license/historical-php
+  * Only change the checkbox when needed.
+  Otherwise, we end up with endless paint() calls which
+  hammer the CPU.
+  * A few small fixes for PIL.
+  (cherry picked from commit e7879325f075c9d6749a4324618691933727574c)
+  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
+* Fixed button icons (backport `#159 <https://github.com/ros-visualization/rqt_bag/issues/159>`_) (`#160 <https://github.com/ros-visualization/rqt_bag/issues/160>`_)
+  Fixed button icons (`#159 <https://github.com/ros-visualization/rqt_bag/issues/159>`_)
+  (cherry picked from commit 0d386692f63e35a8ec3c61dee0d70c389f89bf2d)
+  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
+* Contributors: mergify[bot]
 
 1.5.2 (2024-03-28)
 ------------------

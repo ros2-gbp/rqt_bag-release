@@ -26,7 +26,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Player listens to messages from the timeline and publishes them to ROS."""
+"""
+Player listens to messages from the timeline and publishes them to ROS.
+"""
 
 
 from builtin_interfaces.msg import Time
@@ -34,11 +36,14 @@ from python_qt_binding.QtCore import QObject
 from rclpy.qos import QoSProfile
 from rosbag2_py import convert_rclcpp_qos_to_rclpy_qos
 
-CLOCK_TOPIC = '/clock'
+CLOCK_TOPIC = "/clock"
 
 
 class Player(QObject):
-    """Handles publishing messages as the playhead passes over their position."""
+
+    """
+    This object handles publishing messages as the playhead passes over their position
+    """
 
     def __init__(self, node, timeline):
         super(Player, self).__init__()
@@ -84,7 +89,7 @@ class Player(QObject):
     def stop_clock_publishing(self):
         self._publish_clock = False
         if CLOCK_TOPIC in self._publishers:
-            self._node.destroy_publisher(self._publishers[CLOCK_TOPIC])
+            self._node.destroy_publisher(self._publishers[topic])
             del self._publishers[CLOCK_TOPIC]
 
     def stop(self):
@@ -96,8 +101,7 @@ class Player(QObject):
         ros_msg_type = type(ros_message)
         try:
             # Publish based on the original recorded QoS settings
-            self._publishers[topic] = self._node.create_publisher(ros_msg_type, topic,
-                                                                  qos_profile=offered_qos_profile)
+            self._publishers[topic] = self._node.create_publisher(ros_msg_type, topic, qos_profile=offered_qos_profile)
             return True
         except Exception as ex:
             # Any errors, stop listening/publishing to this topic
@@ -110,8 +114,7 @@ class Player(QObject):
 
     def message_viewed(self, bag, entry):
         """
-        Publish a message when it is viewed.
-
+        When a message is viewed publish it
         :param bag: the bag the message is in, ''rosbag.bag''
         :param entry: the bag entry
         """
@@ -142,9 +145,8 @@ class Player(QObject):
 
     def event(self, event):
         """
-        Process events posted by post_event.
-
-        It will call message_cleared or message_viewed with the relevant data.
+        This function will be called to process events posted by post_event
+        it will call message_cleared or message_viewed with the relevant data
         """
         bag, entry = event.data
         if entry:

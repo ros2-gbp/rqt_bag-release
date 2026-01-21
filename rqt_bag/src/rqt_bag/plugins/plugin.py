@@ -28,6 +28,7 @@
 
 
 class Plugin(object):
+
     """
     Interface for rqt_bag plugins.
 
@@ -39,21 +40,19 @@ class Plugin(object):
         pass
 
     def get_view_class(self):
-        """Return class which is a child of rqt_bag.plugin.topic_message_view.TopicMessageView."""
+        """Return a class which is a child of rqt_bag.plugin.topic_message_view.TopicMessageView."""
         raise NotImplementedError()
 
     def get_renderer_class(self):
         """
         Return a class which is a child of rqt_bag.plugin.timeline_renderer.TimelineRenderer.
-
         To omit the renderer component simply return None.
         """
         return None
 
     def get_message_types(self):
         """
-        Return a list of message types which this plugin operates on.
-
+        Return  alist of message types which this plugin operates on.
         To allow your plugin to be run on all message types return ['*'].
         """
         return []

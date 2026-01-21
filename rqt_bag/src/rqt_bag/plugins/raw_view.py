@@ -25,13 +25,14 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
-"""Defines a raw view: a TopicMessageView that displays the message contents in a tree."""
-
+"""
+Defines a raw view: a TopicMessageView that displays the message contents in a tree.
+"""
 import array
 import math
 
 from builtin_interfaces.msg import Time as TimeMsg
+from rclpy.time import Time
 
 import numpy
 
@@ -43,6 +44,12 @@ from rclpy.time import Time
 from rqt_bag.bag_helper import rpy_from_quaternion
 
 from .topic_message_view import TopicMessageView
+
+# compatibility fix for python2/3
+try:
+    long
+except NameError:
+    long = int
 
 MAX_LIST_LEN = 50
 LIST_TAIL_LEN = 10
@@ -62,8 +69,6 @@ class RawView(TopicMessageView):
 
     def __init__(self, timeline, parent, topic):
         """
-        Construct a RawView object.
-
         :param timeline: timeline data object, ''BagTimeline''
         :param parent: widget that will be added to the ros_gui context, ''QWidget''
         """
@@ -74,8 +79,7 @@ class RawView(TopicMessageView):
         parent.layout().addWidget(self.message_tree)
 
     def message_viewed(self, *, entry, ros_message, msg_type_name, **kwargs):
-        super(RawView, self).message_viewed(entry=entry,
-                                            ros_message=ros_message, msg_type_name=msg_type_name)
+        super(RawView, self).message_viewed(entry=entry, ros_message=ros_message, msg_type_name=msg_type_name)
         if ros_message is None:
             self.message_cleared()
         else:
@@ -105,8 +109,7 @@ class MessageTree(QTreeWidget):
 
     def set_message(self, msg, msg_type_name):
         """
-        Clear the tree view and displays the new message.
-
+        Clears the tree view and displays the new message
         :param msg: message object to display in the treeview, ''msg''
         """
         # Remember whether items were expanded or not before deleting
@@ -221,8 +224,8 @@ class MessageTree(QTreeWidget):
         else:
             subobjs = []
 
-        if type(obj) in (int, float):
-            if type(obj) is float:
+        if type(obj) in [int, long, float]:
+            if type(obj) == float:
                 obj_repr = '%.6f' % obj
             else:
                 obj_repr = str(obj)
@@ -232,7 +235,7 @@ class MessageTree(QTreeWidget):
             else:
                 label += ':  %s' % obj_repr
 
-        elif type(obj) in (str, bool, int, float, complex, Time, TimeMsg, list, tuple,
+        elif type(obj) in (str, bool, int, long, float, complex, Time, TimeMsg, list, tuple,
                            array.array, numpy.ndarray):
             if type(obj) is array.array:
                 if obj.typecode == 'B':
