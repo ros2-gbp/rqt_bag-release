@@ -1,3 +1,28 @@
+## rqt_bag (humble) - 1.1.6-1
+
+The packages in the `rqt_bag` repository were released into the `humble` distro by running `/usr/bin/bloom-release --rosdistro humble rqt_bag` on `Fri, 13 Feb 2026 21:08:40 -0000`
+
+These packages were released:
+- `rqt_bag`
+- `rqt_bag_plugins`
+
+Version of package(s) in repository `rqt_bag`:
+
+- upstream repository: https://github.com/ros-visualization/rqt_bag.git
+- release repository: https://github.com/ros2-gbp/rqt_bag-release.git
+- rosdistro version: `1.1.5-1`
+- old version: `1.1.5-1`
+- new version: `1.1.6-1`
+
+Versions of tools used:
+
+- bloom version: `0.13.0`
+- catkin_pkg version: `1.1.0`
+- rosdep version: `0.26.0`
+- rosdistro version: `1.0.1`
+- vcstools version: `0.1.42`
+
+
 ## rqt_bag (jazzy) - 1.5.6-1
 
 The packages in the `rqt_bag` repository were released into the `jazzy` distro by running `/usr/bin/bloom-release --track jazzy --rosdistro jazzy rqt_bag` on `Wed, 21 Jan 2026 22:25:19 -0000`
