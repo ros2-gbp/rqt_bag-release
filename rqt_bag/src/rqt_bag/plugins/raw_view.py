@@ -1,48 +1,45 @@
+# Software License Agreement (BSD License)
+#
 # Copyright (c) 2012, Willow Garage, Inc.
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+# modification, are permitted provided that the following conditions
+# are met:
 #
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
 #
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the
-#      documentation and/or other materials provided with the distribution.
-#
-#    * Neither the name of the Willow Garage nor the names of its
-#      contributors may be used to endorse or promote products derived from
-#      this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 """
 Defines a raw view: a TopicMessageView that displays the message contents in a tree.
 """
-import array
+import codecs
 import math
 
-from builtin_interfaces.msg import Time as TimeMsg
 from rclpy.time import Time
-
-import numpy
 
 from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtWidgets import \
-    QAbstractItemView, QApplication, QSizePolicy, QTreeWidget, QTreeWidgetItem, QWidget
-
-from rclpy.time import Time
-from rqt_bag.bag_helper import rpy_from_quaternion
-
+    QApplication, QAbstractItemView, QSizePolicy, QTreeWidget, QTreeWidgetItem, QWidget
 from .topic_message_view import TopicMessageView
 
 # compatibility fix for python2/3
@@ -50,15 +47,6 @@ try:
     long
 except NameError:
     long = int
-
-MAX_LIST_LEN = 50
-LIST_TAIL_LEN = 10
-
-# Labels of virtual (computed) fields. They cannot contain spaces and cannot end with ].
-ROLL_LABEL = '*roll'
-PITCH_LABEL = '*pitch'
-YAW_LABEL = '*yaw'
-
 
 class RawView(TopicMessageView):
     name = 'Raw'
@@ -197,30 +185,13 @@ class MessageTree(QTreeWidget):
 
         if hasattr(obj, '__slots__'):
             subobjs = [(slot, getattr(obj, slot)) for slot in obj.__slots__]
-            type_name = type(obj).__name__
-            quat_slots = ('_x', '_y', '_z', '_w')
-            if 'Quaternion' in type_name and all(s in obj.__slots__ for s in quat_slots):
-                roll, pitch, yaw = rpy_from_quaternion(obj.x, obj.y, obj.z, obj.w)
-                subobjs.append((ROLL_LABEL, '%.6f (%.3f°)' % (roll, math.degrees(roll))))
-                subobjs.append((PITCH_LABEL, '%.6f (%.3f°)' % (pitch, math.degrees(pitch))))
-                subobjs.append((YAW_LABEL, '%.6f (%.3f°)' % (yaw, math.degrees(yaw))))
-        elif type(obj) in (list, tuple, array.array, numpy.ndarray):
-            if type(obj) in (array.array, numpy.ndarray):
-                list_obj = obj.tolist()
-            else:
-                list_obj = obj
-            len_obj = len(list_obj)
-            short_list_obj = list_obj[:MAX_LIST_LEN]
+        elif type(obj) in [list, tuple]:
+            len_obj = len(obj)
             if len_obj == 0:
                 subobjs = []
             else:
                 w = int(math.ceil(math.log10(len_obj)))
-                subobjs = [('[%*d]' % (w, i), subobj) for (i, subobj) in enumerate(short_list_obj)]
-                if len_obj > MAX_LIST_LEN:
-                    subobjs.append(('[%s]' % (w * '.',), '{} items total'.format(len_obj)))
-                    for i in range(-LIST_TAIL_LEN, 0):
-                        if len_obj + i >= MAX_LIST_LEN:
-                            subobjs.append(('[%*d]' % (w, len_obj + i), list_obj[i]))
+                subobjs = [('[%*d]' % (w, i), subobj) for (i, subobj) in enumerate(obj)]
         else:
             subobjs = []
 
@@ -235,21 +206,9 @@ class MessageTree(QTreeWidget):
             else:
                 label += ':  %s' % obj_repr
 
-        elif type(obj) in (str, bool, int, long, float, complex, Time, TimeMsg, list, tuple,
-                           array.array, numpy.ndarray):
-            if type(obj) is array.array:
-                if obj.typecode == 'B':
-                    obj_repr = obj.tobytes().decode('utf-8', 'ignore')
-                elif obj.typecode == 'u':
-                    obj_repr = ''.join(obj.tolist())
-                else:
-                    obj_repr = '[' + ','.join(map(str, obj.tolist())) + ']'
-            elif type(obj) is Time:
-                obj_repr = '{:.9f}'.format(obj.nanoseconds * 1e-9)
-            elif type(obj) is TimeMsg:
-                obj_repr = '{:.9f}'.format(Time.from_msg(obj).nanoseconds * 1e-9)
-            else:
-                obj_repr = str(obj)
+        elif type(obj) in [str, bool, int, long, float, complex, Time]:
+            # Ignore any binary data
+            obj_repr = codecs.utf_8_decode(str(obj).encode(), 'ignore')[0]
 
             # Truncate long representations
             if len(obj_repr) >= 50:

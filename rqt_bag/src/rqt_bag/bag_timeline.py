@@ -1,31 +1,36 @@
+# Software License Agreement (BSD License)
+#
 # Copyright (c) 2012, Willow Garage, Inc.
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+# modification, are permitted provided that the following conditions
+# are met:
 #
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
 #
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the
-#      documentation and/or other materials provided with the distribution.
-#
-#    * Neither the name of the Willow Garage nor the names of its
-#      contributors may be used to endorse or promote products derived from
-#      this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import rclpy
 import rosbag2_py
 import time
 import threading
@@ -43,6 +48,7 @@ from .message_listener_thread import MessageListenerThread
 from .message_loader_thread import MessageLoaderThread
 from .player import Player
 from .recorder import Recorder
+from .timeline_menu import TimelinePopupMenu
 
 
 class BagTimeline(QGraphicsScene):
@@ -111,17 +117,13 @@ class BagTimeline(QGraphicsScene):
 
         # Database settings
         self.serialization_format = 'cdr'
-        self.storage_id = rosbag2_py.get_default_storage_id()
+        self.storage_id = 'sqlite3'
 
     def get_context(self):
         """
         :returns: the ROS_GUI context, 'PluginContext'
         """
         return self._context
-
-    def stop_recorder(self):
-        if self._recorder:
-            self._recorder.stop()
 
     def handle_close(self):
         """
@@ -137,7 +139,8 @@ class BagTimeline(QGraphicsScene):
             self._message_loaders[topic].stop()
         if self._player:
             self._player.stop()
-        self.stop_recorder()
+        if self._recorder:
+            self._recorder.stop()
         if self.background_task is not None:
             self.background_task_cancel = True
         self._timeline_frame.handle_close()
@@ -505,9 +508,28 @@ class BagTimeline(QGraphicsScene):
                 export_filename, str(ex)), QMessageBox.Ok).exec_()
         self.stop_background_task()
 
-    def read_message(self, bag, position, topic):
+    def read_message(self, bag, position):
         with self._bag_lock:
-            return bag.get_entry(Time(nanoseconds=position), topic)
+            return bag.get_entry(Time(nanoseconds=position))
+
+    # Mouse events
+    def on_mouse_down(self, event):
+        if event.buttons() == Qt.LeftButton:
+            self._timeline_frame.on_left_down(event)
+        elif event.buttons() == Qt.MidButton:
+            self._timeline_frame.on_middle_down(event)
+        elif event.buttons() == Qt.RightButton:
+            topic = self._timeline_frame.map_y_to_topic(self.views()[0].mapToScene(event.pos()).y())
+            TimelinePopupMenu(self, event, topic)
+
+    def on_mouse_up(self, event):
+        self._timeline_frame.on_mouse_up(event)
+
+    def on_mouse_move(self, event):
+        self._timeline_frame.on_mouse_move(event)
+
+    def on_mousewheel(self, event):
+        self._timeline_frame.on_mousewheel(event)
 
     # Zooming
 
@@ -720,9 +742,10 @@ class BagTimeline(QGraphicsScene):
             self._messages_cvs[topic] = threading.Condition()
             self._message_loaders[topic] = MessageLoaderThread(self, topic)
 
-        # Send new message info to the cache
+        # Notify the index caching thread that it has work to do
         with self._timeline_frame.index_cache_cv:
-            self._timeline_frame.cache_message(topic, t)
+            self._timeline_frame.invalidated_caches.add(topic)
+            self._timeline_frame.index_cache_cv.notify()
 
         if topic in self._listeners:
             for listener in self._listeners[topic]:

@@ -62,46 +62,25 @@
 #  doesn't make sense to make it align with the timeline. This could be done
 #  if someone wanted to implement a separate timeline view
 
-import array
-import codecs
-import math
-from numbers import Complex, Number, Real
 import os
+import math
+import codecs
 import threading
-from typing import Sequence
+from rqt_bag import MessageView
 
 from ament_index_python import get_resource
-from builtin_interfaces.msg import Time as TimeMsg
-from geometry_msgs.msg import Quaternion
-
-import numpy
-
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, qWarning, Signal
 from python_qt_binding.QtGui import QDoubleValidator, QIcon
 from python_qt_binding.QtWidgets import \
     QWidget, QPushButton, QTreeWidget, QTreeWidgetItem, QSizePolicy
 
+from rqt_plot.data_plot import DataPlot
+from rqt_bag import bag_helper
+
 # rclpy used for Time and Duration objects, for interacting with rosbag
 from rclpy.duration import Duration
 from rclpy.time import Time
-
-from rqt_bag import bag_helper
-from rqt_bag import MessageView
-
-from rqt_plot.data_plot import DataPlot
-
-MAX_LIST_LEN = 50
-LIST_TAIL_LEN = 10
-
-# Labels of virtual (computed) fields. They cannot contain spaces and cannot end with ].
-FLOAT_SECONDS_LABEL = '*float_seconds'
-ROLL_RAD_LABEL = '*roll(rad)'
-PITCH_RAD_LABEL = '*pitch(rad)'
-YAW_RAD_LABEL = '*yaw(rad)'
-ROLL_DEG_LABEL = '*roll(deg)'
-PITCH_DEG_LABEL = '*pitch(deg)'
-YAW_DEG_LABEL = '*yaw(deg)'
 
 # compatibility fix for python2/3
 try:
@@ -198,15 +177,11 @@ class PlotWidget(QWidget):
             bag, entry = self.timeline.get_entry(start_time, topic)
             if bag is None:
                 bag, entry = self.timeline.get_entry_after(start_time, topic)
-                if entry is not None:
-                    start_time = Time(nanoseconds=entry.timestamp)
-                else:
-                    break
+                start_time = Time(nanoseconds=entry.timestamp)
 
         self.bag = bag
-        if entry is not None:
-            (ros_message, msg_type) = self.bag.deserialize_entry(entry)
-            self.message_tree.set_message(ros_message, msg_type)
+        (ros_message, msg_type, topic) = self.bag.deserialize_entry(entry)
+        self.message_tree.set_message(ros_message, msg_type)
 
         # state used by threaded resampling
         self.resampling_active = False
@@ -277,7 +252,7 @@ class PlotWidget(QWidget):
                 if not self.resampling_active:
                     return
 
-                (ros_message, _) = self.bag.deserialize_entry(entry)
+                (ros_message, _, _) = self.bag.deserialize_entry(entry)
                 timestamp = Time(nanoseconds=entry.timestamp)
 
                 for path in self.resample_fields:
@@ -293,38 +268,12 @@ class PlotWidget(QWidget):
                             if field.endswith(']'):
                                 field = field[:-1]
                                 field, _, index = field.rpartition('[')
-                            if type(y_value) in (Time, TimeMsg) and field == FLOAT_SECONDS_LABEL:
-                                time_val = y_value if type(y_value) is Time \
-                                           else Time().from_msg(y_value)
-                                y_value = bag_helper.to_sec(time_val)
-                            elif isinstance(y_value, Quaternion):
-                                roll, pitch, yaw = bag_helper.rpy_from_quaternion(
-                                    y_value.x, y_value.y, y_value.z, y_value.w)
-                                if field == ROLL_RAD_LABEL:
-                                    y_value = roll
-                                elif field == PITCH_RAD_LABEL:
-                                    y_value = pitch
-                                elif field == YAW_RAD_LABEL:
-                                    y_value = yaw
-                                elif field == ROLL_DEG_LABEL:
-                                    y_value = math.degrees(roll)
-                                elif field == PITCH_DEG_LABEL:
-                                    y_value = math.degrees(pitch)
-                                elif field == YAW_DEG_LABEL:
-                                    y_value = math.degrees(yaw)
-                                else:
-                                    y_value = getattr(y_value, field)
-                            else:
-                                y_value = getattr(y_value, field)
+                            y_value = getattr(y_value, field)
                             if index:
                                 index = int(index)
-                                try:
-                                    y_value = y_value[index]
-                                except IndexError:
-                                    y_value = None
-                        if y_value is not None:
-                            y[path].append(y_value)
-                            x[path].append(bag_helper.to_sec(timestamp - self.start_stamp))
+                                y_value = y_value[index]
+                        y[path].append(y_value)
+                        x[path].append(bag_helper.to_sec(timestamp - self.start_stamp))
 
                 # TODO: incremental plot updates would go here...
                 #       we should probably do incremental updates based on time;
@@ -486,39 +435,22 @@ class MessageTree(QTreeWidget):
         # Remove the leading underscore for display
         label = name[1:] if name.startswith('_') else name
 
-        if hasattr(obj, '_fields_and_field_types'):
-            subobjs = [(field_name, getattr(obj, field_name)) for field_name in obj.get_fields_and_field_types().keys()]
-            if type(obj) in (Time, TimeMsg):
-                time_obj = obj if type(obj) is Time else Time().from_msg(obj)
-                subobjs.append((FLOAT_SECONDS_LABEL, bag_helper.to_sec(time_obj)))
-            elif isinstance(obj, Quaternion):
-                roll, pitch, yaw = bag_helper.rpy_from_quaternion(
-                    obj.x, obj.y, obj.z, obj.w)
-                subobjs.append((ROLL_RAD_LABEL, roll))
-                subobjs.append((PITCH_RAD_LABEL, pitch))
-                subobjs.append((YAW_RAD_LABEL, yaw))
-                subobjs.append((ROLL_DEG_LABEL, math.degrees(roll)))
-                subobjs.append((PITCH_DEG_LABEL, math.degrees(pitch)))
-                subobjs.append((YAW_DEG_LABEL, math.degrees(yaw)))
-        elif isinstance(obj, (Sequence, numpy.ndarray)) and not isinstance(obj, str):
+        if hasattr(obj, '__slots__'):
+            subobjs = [(slot, getattr(obj, slot)) for slot in obj.__slots__]
+        elif type(obj) in [list, tuple]:
             len_obj = len(obj)
-
             if len_obj == 0:
                 subobjs = []
             else:
                 w = int(math.ceil(math.log10(len_obj)))
-                subobjs = [('[%*d]' % (w, i), subobj)
-                           for (i, subobj) in enumerate(obj[:MAX_LIST_LEN])]
-                tail_start = max(MAX_LIST_LEN, len_obj - LIST_TAIL_LEN)
-                subobjs.extend([('[%*d]' % (w, i + tail_start), subobj)
-                                for (i, subobj) in enumerate(obj[tail_start:])])
+                subobjs = [('[%*d]' % (w, i), subobj) for (i, subobj) in enumerate(obj)]
         else:
             subobjs = []
 
         plotitem = False
-        if isinstance(obj, Number):
+        if type(obj) in [int, long, float]:
             plotitem = True
-            if isinstance(obj, Real):
+            if type(obj) == float:
                 obj_repr = '%.6f' % obj
             else:
                 obj_repr = str(obj)
@@ -528,7 +460,7 @@ class MessageTree(QTreeWidget):
             else:
                 label += ':  %s' % obj_repr
 
-        elif type(obj) in [str, bool, Complex, Time]:
+        elif type(obj) in [str, bool, int, long, float, complex, Time]:
             # Ignore any binary data
             obj_repr = codecs.utf_8_decode(str(obj).encode(), 'ignore')[0]
 

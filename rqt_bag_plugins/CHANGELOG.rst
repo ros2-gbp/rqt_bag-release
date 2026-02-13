@@ -2,93 +2,18 @@
 Changelog for package rqt_bag_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.5.6 (2026-01-21)
+1.1.6 (2026-02-13)
 ------------------
-* fix setuptools deprecations (backport `#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_) (`#203 <https://github.com/ros-visualization/rqt_bag/issues/203>`_)
-  fix setuptools deprecations (`#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_)
-  (cherry picked from commit 34e39bcb6455d18d0073a05797e6e1f04bbcbf7c)
-  Co-authored-by: mosfet80 <10235105+mosfet80@users.noreply.github.com>
+* fix setuptools deprecations (backport `#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_) (`#204 <https://github.com/ros-visualization/rqt_bag/issues/204>`_)
 * Contributors: mergify[bot]
 
-1.5.5 (2025-08-06)
-------------------
-* Display roll, pitch, yaw values for quaternions (backport `#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_) (`#199 <https://github.com/ros-visualization/rqt_bag/issues/199>`_)
-  * Display roll, pitch, yaw values for quaternions (`#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_)
-  (cherry picked from commit 4593d82d2b23a322119c6a518befec970db7d54e)
-* Fixed image helper and added support for PNG-coded compressedDepth (backport `#176 <https://github.com/ros-visualization/rqt_bag/issues/176>`_)  (`#196 <https://github.com/ros-visualization/rqt_bag/issues/196>`_)
-* Improve plot view (backport `#174 <https://github.com/ros-visualization/rqt_bag/issues/174>`_) (`#195 <https://github.com/ros-visualization/rqt_bag/issues/195>`_)
-* plot_view: Fixed display of initial message (backport `#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_) (`#187 <https://github.com/ros-visualization/rqt_bag/issues/187>`_)
-  plot_view: Fixed display of initial message (`#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_)
-  (cherry picked from commit 9ff337266e97143c2ec9eef6f9aa03bde2b31997)
-  Co-authored-by: Martin Pecka <peci1@seznam.cz>
-* Contributors: Martin Pecka, mergify[bot]
-
-1.5.4 (2024-09-06)
+1.1.5 (2024-05-15)
 ------------------
 
-1.5.3 (2024-05-14)
-------------------
-* Adapted to rosbag2_py (backport `#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_) (`#165 <https://github.com/ros-visualization/rqt_bag/issues/165>`_)
-  Adapted to rosbag2_py (`#156 <https://github.com/ros-visualization/rqt_bag/issues/156>`_)
-  * Switch to an in-built ImageQt class.
-  That's because in newer versions of PIL, they skip over
-  PyQt5 support even though it works.
-  * Update for new rosbag2_py API.
-  * Fix TopicMetadata call
-  * Avoid freeze the gui
-  * Fixed checkboes
-  * Update with the license from PIL.
-  Note that this is an OSI-approved license, even though
-  it is technically deprecated by
-  OSI: https://opensource.org/license/historical-php
-  * Only change the checkbox when needed.
-  Otherwise, we end up with endless paint() calls which
-  hammer the CPU.
-  * A few small fixes for PIL.
-  (cherry picked from commit e7879325f075c9d6749a4324618691933727574c)
-  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
-* Fixed image timeline renderer (backport `#158 <https://github.com/ros-visualization/rqt_bag/issues/158>`_) (`#163 <https://github.com/ros-visualization/rqt_bag/issues/163>`_)
-  Fixed image timeline renderer (`#158 <https://github.com/ros-visualization/rqt_bag/issues/158>`_)
-  (cherry picked from commit a939f27f6323ba1117edaafcdc498fc982743d4f)
-  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
-* Contributors: mergify[bot]
-
-1.5.2 (2024-03-28)
-------------------
-* Add a test dependency on pytest. (`#153 <https://github.com/ros-visualization/rqt_bag/issues/153>`_)
-* Revert "Add a dependency on pytest to rqt_bag and rqt_bag_plugins. (#… (`#151 <https://github.com/ros-visualization/rqt_bag/issues/151>`_)
-* Update maintainer to myself. (`#150 <https://github.com/ros-visualization/rqt_bag/issues/150>`_)
-* Update maintainer list in package.xml files (`#149 <https://github.com/ros-visualization/rqt_bag/issues/149>`_)
-* Contributors: Chris Lalancette, Michael Jeronimo
-
-1.5.1 (2024-02-07)
-------------------
-* Add a dependency on pytest to rqt_bag and rqt_bag_plugins. (`#148 <https://github.com/ros-visualization/rqt_bag/issues/148>`_)
-* Contributors: Chris Lalancette
-
-1.5.0 (2023-06-07)
+1.1.4 (2022-11-07)
 ------------------
 
-1.4.1 (2023-05-11)
-------------------
-
-1.4.0 (2023-04-28)
-------------------
-
-1.3.1 (2023-04-11)
-------------------
-* Changes the use of __slots_\_ for the field and field type getter (`#138 <https://github.com/ros-visualization/rqt_bag/issues/138>`_)
-* Contributors: Eloy Briceno
-
-1.3.0 (2023-02-14)
-------------------
-* [rolling] Update maintainers - 2022-11-07 (`#132 <https://github.com/ros-visualization/rqt_bag/issues/132>`_)
-* Contributors: Audrow Nash
-
-1.2.1 (2022-09-13)
-------------------
-
-1.2.0 (2022-05-10)
+1.1.3 (2022-05-10)
 ------------------
 
 1.1.2 (2022-02-06)
