@@ -1,5 +1,3 @@
-# Software License Agreement (BSD License)
-#
 # Copyright (c) 2014, Austin Hendrix, Stanford University
 # All rights reserved.
 #
@@ -7,21 +5,21 @@
 # modification, are permitted provided that the following conditions
 # are met:
 #
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above
-#    copyright notice, this list of conditions and the following
-#    disclaimer in the documentation and/or other materials provided
-#    with the distribution.
-#  * Neither the name of Willow Garage, Inc. nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
+#   * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#   * Redistributions in binary form must reproduce the above
+#     copyright notice, this list of conditions and the following
+#     disclaimer in the documentation and/or other materials provided
+#     with the distribution.
+#   * Neither the name of the Willow Garage, Inc. nor the names of its
+#     contributors may be used to endorse or promote products derived
+#     from this software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
 # FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 # INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
 # BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
@@ -62,37 +60,50 @@
 #  doesn't make sense to make it align with the timeline. This could be done
 #  if someone wanted to implement a separate timeline view
 
-import os
-import math
 import codecs
+import math
+from numbers import Complex, Number, Real
+import os
 import threading
-from rqt_bag import MessageView
+from typing import Sequence
 
 from ament_index_python import get_resource
+from builtin_interfaces.msg import Time as TimeMsg
+from geometry_msgs.msg import Quaternion
+
+import numpy
+
 from python_qt_binding import loadUi
-from python_qt_binding.QtCore import Qt, qWarning, Signal
+from python_qt_binding.QtCore import Qt, qWarning
 from python_qt_binding.QtGui import QDoubleValidator, QIcon
 from python_qt_binding.QtWidgets import \
-    QWidget, QPushButton, QTreeWidget, QTreeWidgetItem, QSizePolicy
-
-from rqt_plot.data_plot import DataPlot
-from rqt_bag import bag_helper
+    QPushButton, QSizePolicy, QTreeWidget, QTreeWidgetItem, QWidget
 
 # rclpy used for Time and Duration objects, for interacting with rosbag
 from rclpy.duration import Duration
 from rclpy.time import Time
 
-# compatibility fix for python2/3
-try:
-    long
-except NameError:
-    long = int
+from rqt_bag import bag_helper
+from rqt_bag import MessageView
+
+from rqt_plot.data_plot import DataPlot
+
+MAX_LIST_LEN = 50
+LIST_TAIL_LEN = 10
+
+# Labels of virtual (computed) fields. They cannot contain spaces and cannot end with ].
+FLOAT_SECONDS_LABEL = '*float_seconds'
+ROLL_RAD_LABEL = '*roll(rad)'
+PITCH_RAD_LABEL = '*pitch(rad)'
+YAW_RAD_LABEL = '*yaw(rad)'
+ROLL_DEG_LABEL = '*roll(deg)'
+PITCH_DEG_LABEL = '*pitch(deg)'
+YAW_DEG_LABEL = '*yaw(deg)'
+
 
 class PlotView(MessageView):
+    """Popup plot viewer."""
 
-    """
-    Popup plot viewer
-    """
     name = 'Plot'
 
     def __init__(self, timeline, parent, topic):
@@ -103,10 +114,9 @@ class PlotView(MessageView):
         parent.layout().addWidget(self.plot_widget)
 
     def message_viewed(self, *, entry, ros_message, msg_type_name, **kwargs):
-        """
-        refreshes the plot
-        """
-        cursor_position = bag_helper.to_sec((Time(nanoseconds=entry.timestamp) - self.plot_widget.start_stamp))
+        """Refresh the plot."""
+        rclpy_time = Time(nanoseconds=entry.timestamp)
+        cursor_position = bag_helper.to_sec(rclpy_time - self.plot_widget.start_stamp)
 
         self.plot_widget.message_tree.set_message(ros_message, msg_type_name)
         self.plot_widget.set_cursor(cursor_position)
@@ -156,12 +166,12 @@ class PlotWidget(QWidget):
         self.data_plot_layout.addWidget(self.plot)
 
         self._home_button = QPushButton()
-        self._home_button.setToolTip("Reset View")
+        self._home_button.setToolTip('Reset View')
         self._home_button.setIcon(QIcon.fromTheme('go-home'))
         self._home_button.clicked.connect(self.home)
         self.plot_toolbar_layout.addWidget(self._home_button)
 
-        self._config_button = QPushButton("Configure Plot")
+        self._config_button = QPushButton('Configure Plot')
         self._config_button.clicked.connect(self.plot.doSettingsDialog)
         self.plot_toolbar_layout.addWidget(self._config_button)
 
@@ -177,11 +187,15 @@ class PlotWidget(QWidget):
             bag, entry = self.timeline.get_entry(start_time, topic)
             if bag is None:
                 bag, entry = self.timeline.get_entry_after(start_time, topic)
-                start_time = Time(nanoseconds=entry.timestamp)
+                if entry is not None:
+                    start_time = Time(nanoseconds=entry.timestamp)
+                else:
+                    break
 
         self.bag = bag
-        (ros_message, msg_type, topic) = self.bag.deserialize_entry(entry)
-        self.message_tree.set_message(ros_message, msg_type)
+        if entry is not None:
+            (ros_message, msg_type) = self.bag.deserialize_entry(entry)
+            self.message_tree.set_message(ros_message, msg_type)
 
         # state used by threaded resampling
         self.resampling_active = False
@@ -205,7 +219,7 @@ class PlotWidget(QWidget):
         self.plot.redraw()
 
     def load_data(self):
-        """get a generator for the specified time range on our bag"""
+        """Get a generator for the specified time range on our bag."""
         return self.bag.get_entries_in_range(self.start_stamp + Duration(seconds=self.limits[0]),
                                              self.start_stamp + Duration(seconds=self.limits[1]),
                                              self.msgtopic)
@@ -252,7 +266,7 @@ class PlotWidget(QWidget):
                 if not self.resampling_active:
                     return
 
-                (ros_message, _, _) = self.bag.deserialize_entry(entry)
+                (ros_message, _) = self.bag.deserialize_entry(entry)
                 timestamp = Time(nanoseconds=entry.timestamp)
 
                 for path in self.resample_fields:
@@ -261,19 +275,46 @@ class PlotWidget(QWidget):
                     # the minimum and maximum values present within a sample
                     # If the data has spikes, this is particularly bad because they
                     # will be missed entirely at some resolutions and offsets
-                    if x[path] == [] or bag_helper.to_sec(timestamp - self.start_stamp) - x[path][-1] >= self.timestep:
+                    bag_sec = bag_helper.to_sec(timestamp - self.start_stamp)
+                    if x[path] == [] or bag_sec - x[path][-1] >= self.timestep:
                         y_value = ros_message
                         for field in path.split('.'):
                             index = None
                             if field.endswith(']'):
                                 field = field[:-1]
                                 field, _, index = field.rpartition('[')
-                            y_value = getattr(y_value, field)
+                            if type(y_value) in (Time, TimeMsg) and field == FLOAT_SECONDS_LABEL:
+                                time_val = y_value if type(y_value) is Time \
+                                           else Time().from_msg(y_value)
+                                y_value = bag_helper.to_sec(time_val)
+                            elif isinstance(y_value, Quaternion):
+                                roll, pitch, yaw = bag_helper.rpy_from_quaternion(
+                                    y_value.x, y_value.y, y_value.z, y_value.w)
+                                if field == ROLL_RAD_LABEL:
+                                    y_value = roll
+                                elif field == PITCH_RAD_LABEL:
+                                    y_value = pitch
+                                elif field == YAW_RAD_LABEL:
+                                    y_value = yaw
+                                elif field == ROLL_DEG_LABEL:
+                                    y_value = math.degrees(roll)
+                                elif field == PITCH_DEG_LABEL:
+                                    y_value = math.degrees(pitch)
+                                elif field == YAW_DEG_LABEL:
+                                    y_value = math.degrees(yaw)
+                                else:
+                                    y_value = getattr(y_value, field)
+                            else:
+                                y_value = getattr(y_value, field)
                             if index:
                                 index = int(index)
-                                y_value = y_value[index]
-                        y[path].append(y_value)
-                        x[path].append(bag_helper.to_sec(timestamp - self.start_stamp))
+                                try:
+                                    y_value = y_value[index]
+                                except IndexError:
+                                    y_value = None
+                        if y_value is not None:
+                            y[path].append(y_value)
+                            x[path].append(bag_helper.to_sec(timestamp - self.start_stamp))
 
                 # TODO: incremental plot updates would go here...
                 #       we should probably do incremental updates based on time;
@@ -287,7 +328,7 @@ class PlotWidget(QWidget):
         # update the plot with final resampled data
         for path in self.resample_fields:
             if len(x[path]) < 1:
-                qWarning("Resampling resulted in 0 data points for %s" % path)
+                qWarning('Resampling resulted in 0 data points for %s' % path)
             else:
                 if path in self.paths_on:
                     self.plot.clear_values(path)
@@ -389,7 +430,7 @@ class MessageTree(QTreeWidget):
                     self._expanded_paths.add(path)
                 elif path in self._expanded_paths:
                     self._expanded_paths.remove(path)
-                if item.checkState(0) == Qt.Checked:
+                if item.checkState(0) == Qt.CheckState.Checked:
                     self._checked_states.add(path)
                 elif path in self._checked_states:
                     self._checked_states.remove(path)
@@ -413,7 +454,8 @@ class MessageTree(QTreeWidget):
         self.update()
 
     def get_item_path(self, item):
-        return item.data(0, Qt.UserRole)[0].replace(' ', '')  # remove spaces that may get introduced in indexing, e.g. [  3] is [3]
+        # remove spaces that may get introduced in indexing, e.g. [  3] is [3]
+        return item.data(0, Qt.ItemDataRole.UserRole)[0].replace(' ', '')
 
     def get_all_items(self):
         items = []
@@ -435,22 +477,40 @@ class MessageTree(QTreeWidget):
         # Remove the leading underscore for display
         label = name[1:] if name.startswith('_') else name
 
-        if hasattr(obj, '__slots__'):
-            subobjs = [(slot, getattr(obj, slot)) for slot in obj.__slots__]
-        elif type(obj) in [list, tuple]:
+        if hasattr(obj, '_fields_and_field_types'):
+            field_keys = obj.get_fields_and_field_types().keys()
+            subobjs = [(field_name, getattr(obj, field_name)) for field_name in field_keys]
+            if type(obj) in (Time, TimeMsg):
+                time_obj = obj if type(obj) is Time else Time().from_msg(obj)
+                subobjs.append((FLOAT_SECONDS_LABEL, bag_helper.to_sec(time_obj)))
+            elif isinstance(obj, Quaternion):
+                roll, pitch, yaw = bag_helper.rpy_from_quaternion(
+                    obj.x, obj.y, obj.z, obj.w)
+                subobjs.append((ROLL_RAD_LABEL, roll))
+                subobjs.append((PITCH_RAD_LABEL, pitch))
+                subobjs.append((YAW_RAD_LABEL, yaw))
+                subobjs.append((ROLL_DEG_LABEL, math.degrees(roll)))
+                subobjs.append((PITCH_DEG_LABEL, math.degrees(pitch)))
+                subobjs.append((YAW_DEG_LABEL, math.degrees(yaw)))
+        elif isinstance(obj, (Sequence, numpy.ndarray)) and not isinstance(obj, str):
             len_obj = len(obj)
+
             if len_obj == 0:
                 subobjs = []
             else:
                 w = int(math.ceil(math.log10(len_obj)))
-                subobjs = [('[%*d]' % (w, i), subobj) for (i, subobj) in enumerate(obj)]
+                subobjs = [('[%*d]' % (w, i), subobj)
+                           for (i, subobj) in enumerate(obj[:MAX_LIST_LEN])]
+                tail_start = max(MAX_LIST_LEN, len_obj - LIST_TAIL_LEN)
+                subobjs.extend([('[%*d]' % (w, i + tail_start), subobj)
+                                for (i, subobj) in enumerate(obj[tail_start:])])
         else:
             subobjs = []
 
         plotitem = False
-        if type(obj) in [int, long, float]:
+        if isinstance(obj, Number):
             plotitem = True
-            if type(obj) == float:
+            if isinstance(obj, Real):
                 obj_repr = '%.6f' % obj
             else:
                 obj_repr = str(obj)
@@ -460,7 +520,7 @@ class MessageTree(QTreeWidget):
             else:
                 label += ':  %s' % obj_repr
 
-        elif type(obj) in [str, bool, int, long, float, complex, Time]:
+        elif type(obj) in [str, bool, Complex, Time]:
             # Ignore any binary data
             obj_repr = codecs.utf_8_decode(str(obj).encode(), 'ignore')[0]
 
@@ -476,12 +536,12 @@ class MessageTree(QTreeWidget):
             self.addTopLevelItem(item)
         else:
             parent.addChild(item)
-        if plotitem == True:
+        if plotitem:
             if path.replace(' ', '') in self._checked_states:
-                item.setCheckState(0, Qt.Checked)
+                item.setCheckState(0, Qt.CheckState.Checked)
             else:
-                item.setCheckState(0, Qt.Unchecked)
-        item.setData(0, Qt.UserRole, (path, obj_type))
+                item.setCheckState(0, Qt.CheckState.Unchecked)
+        item.setData(0, Qt.ItemDataRole.UserRole, (path, obj_type))
 
         for subobj_name, subobj in subobjs:
             if subobj is None:
@@ -503,7 +563,7 @@ class MessageTree(QTreeWidget):
 
     # Keyboard handler
     def on_key_press(self, event):
-        key, ctrl = event.key(), event.modifiers() & Qt.ControlModifier
+        key, ctrl = event.key(), event.modifiers() & Qt.KeyboardModifier.ControlModifier
         if ctrl:
             if key == ord('C') or key == ord('c'):
                 # Ctrl-C: copy text from selected items to clipboard
@@ -515,18 +575,19 @@ class MessageTree(QTreeWidget):
                 self.selectAll()
 
     def handleChanged(self, item, column):
-        if item.data(0, Qt.UserRole) == None:
+        if item.data(0, Qt.ItemDataRole.UserRole) is None:
             pass
         else:
             # Strip the leading underscore from each of the path segments
-            segments = [segment[1:] if segment[0] == '_' else segment for segment in self.get_item_path(item).split('.')]
-            path  = '.'.join(segments)
+            split_item_path = self.get_item_path(item).split('.')
+            segments = [seg[1:] if seg[0] == '_' else seg for seg in split_item_path]
+            path = '.'.join(segments)
 
-            if item.checkState(column) == Qt.Checked:
+            if item.checkState(column) == Qt.CheckState.Checked:
                 if path not in self.plot_list:
                     self.plot_list.add(path)
                     self.parent().parent().parent().add_plot(path)
-            if item.checkState(column) == Qt.Unchecked:
+            if item.checkState(column) == Qt.CheckState.Unchecked:
                 if path in self.plot_list:
                     self.plot_list.remove(path)
                     self.parent().parent().parent().remove_plot(path)

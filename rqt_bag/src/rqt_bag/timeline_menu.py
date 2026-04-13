@@ -1,37 +1,33 @@
-# Software License Agreement (BSD License)
-#
 # Copyright (c) 2009, Willow Garage, Inc.
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
+# modification, are permitted provided that the following conditions are met:
 #
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above
-#    copyright notice, this list of conditions and the following
-#    disclaimer in the documentation and/or other materials provided
-#    with the distribution.
-#  * Neither the name of Willow Garage, Inc. nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
+#    * Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#    * Neither the name of the Willow Garage nor the names of its
+#      contributors may be used to endorse or promote products derived from
+#      this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
 from python_qt_binding.QtCore import qDebug
-from python_qt_binding.QtWidgets import QVBoxLayout, QMenu, QWidget, QDockWidget
+from python_qt_binding.QtWidgets import QDockWidget, QMenu, QVBoxLayout, QWidget
 
 
 class TopicPopupWidget(QWidget):
@@ -64,8 +60,9 @@ class TopicPopupWidget(QWidget):
 
     def show(self, context):
         """
-        Make this topic popup visible, if necessary. This includes setting up
-        the proper close button hacks
+        Make this topic popup visible, if necessary.
+
+        This includes setting up the proper close button hacks
         """
         if not self.parent():
             context.add_widget(self)
@@ -96,10 +93,7 @@ class TopicPopupWidget(QWidget):
 
 
 class TimelinePopupMenu(QMenu):
-
-    """
-    Custom popup menu displayed on rightclick from timeline
-    """
+    """Custom popup menu displayed on rightclick from timeline."""
 
     def __init__(self, timeline, event, menu_topic):
         super(TimelinePopupMenu, self).__init__()
@@ -141,7 +135,7 @@ class TimelinePopupMenu(QMenu):
             self._thumbnail_hide_action = None
             for topic, renderer in self._renderers:
                 if menu_topic == topic:
-                    self._thumbnail_actions.append(self.addAction("Thumbnail"))
+                    self._thumbnail_actions.append(self.addAction('Thumbnail'))
                     self._thumbnail_actions[-1].setCheckable(True)
                     self._thumbnail_actions[-1].setChecked(
                         self.timeline._timeline_frame.is_renderer_active(topic))
@@ -185,7 +179,7 @@ class TimelinePopupMenu(QMenu):
                     datatype_menu.addMenu(topic_menu)
                 view_type_menu.addMenu(datatype_menu)
         else:
-            view_menu = self.addMenu("View")
+            view_menu = self.addMenu('View')
             datatype = self.timeline.get_datatype(menu_topic)
 
             viewer_types = self.timeline._timeline_frame.get_viewer_types(datatype)
@@ -211,18 +205,20 @@ class TimelinePopupMenu(QMenu):
                 self._publish_actions[-1].setCheckable(True)
                 self._publish_actions[-1].setChecked(self.timeline.is_publishing(topic))
         else:
-            self._publish_actions.append(self.addAction("Publish"))
+            self._publish_actions.append(self.addAction('Publish'))
             self._publish_actions[-1].setCheckable(True)
             self._publish_actions[-1].setChecked(self.timeline.is_publishing(menu_topic))
             self._publish_all = None
             self._publish_none = None
 
-        action = self.exec_(event.globalPos())
+        action = self.exec_(event.screenPos())
         if action is not None and action != 0:
             self.process(action)
 
     def process(self, action):
         """
+        Process the action.
+
         :param action: action to execute, ''QAction''
         :raises: when it doesn't recognice the action passed in, ''Exception''
         """

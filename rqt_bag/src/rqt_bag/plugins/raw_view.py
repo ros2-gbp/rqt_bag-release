@@ -1,52 +1,57 @@
-# Software License Agreement (BSD License)
-#
 # Copyright (c) 2012, Willow Garage, Inc.
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
+# modification, are permitted provided that the following conditions are met:
 #
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above
-#    copyright notice, this list of conditions and the following
-#    disclaimer in the documentation and/or other materials provided
-#    with the distribution.
-#  * Neither the name of Willow Garage, Inc. nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
+#    * Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#    * Neither the name of the Willow Garage nor the names of its
+#      contributors may be used to endorse or promote products derived from
+#      this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-"""
-Defines a raw view: a TopicMessageView that displays the message contents in a tree.
-"""
-import codecs
+
+"""Defines a raw view: a TopicMessageView that displays the message contents in a tree."""
+
+import array
 import math
 
-from rclpy.time import Time
+from builtin_interfaces.msg import Time as TimeMsg
+
+import numpy
 
 from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtWidgets import \
-    QApplication, QAbstractItemView, QSizePolicy, QTreeWidget, QTreeWidgetItem, QWidget
+    QAbstractItemView, QApplication, QSizePolicy, QTreeWidget, QTreeWidgetItem, QWidget
+
+from rclpy.time import Time
+from rqt_bag.bag_helper import rpy_from_quaternion
+
 from .topic_message_view import TopicMessageView
 
-# compatibility fix for python2/3
-try:
-    long
-except NameError:
-    long = int
+MAX_LIST_LEN = 50
+LIST_TAIL_LEN = 10
+
+# Labels of virtual (computed) fields. They cannot contain spaces and cannot end with ].
+ROLL_LABEL = '*roll'
+PITCH_LABEL = '*pitch'
+YAW_LABEL = '*yaw'
+
 
 class RawView(TopicMessageView):
     name = 'Raw'
@@ -57,6 +62,8 @@ class RawView(TopicMessageView):
 
     def __init__(self, timeline, parent, topic):
         """
+        Construct a RawView object.
+
         :param timeline: timeline data object, ''BagTimeline''
         :param parent: widget that will be added to the ros_gui context, ''QWidget''
         """
@@ -67,7 +74,8 @@ class RawView(TopicMessageView):
         parent.layout().addWidget(self.message_tree)
 
     def message_viewed(self, *, entry, ros_message, msg_type_name, **kwargs):
-        super(RawView, self).message_viewed(entry=entry, ros_message=ros_message, msg_type_name=msg_type_name)
+        super(RawView, self).message_viewed(entry=entry,
+                                            ros_message=ros_message, msg_type_name=msg_type_name)
         if ros_message is None:
             self.message_cleared()
         else:
@@ -97,7 +105,8 @@ class MessageTree(QTreeWidget):
 
     def set_message(self, msg, msg_type_name):
         """
-        Clears the tree view and displays the new message
+        Clear the tree view and displays the new message.
+
         :param msg: message object to display in the treeview, ''msg''
         """
         # Remember whether items were expanded or not before deleting
@@ -133,7 +142,7 @@ class MessageTree(QTreeWidget):
 
     # Keyboard handler
     def on_key_press(self, event):
-        if event.modifiers() & Qt.ControlModifier:
+        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             key = event.key()
             if key == ord('C') or key == ord('c'):
                 # Ctrl-C: copy text from selected items to clipboard
@@ -162,7 +171,7 @@ class MessageTree(QTreeWidget):
 
     def get_item_path(self, item):
         # remove spaces that may get introduced in indexing, e.g. [  3] is [3]
-        return item.data(0, Qt.UserRole)[0].replace(' ', '')
+        return item.data(0, Qt.ItemDataRole.UserRole)[0].replace(' ', '')
 
     def get_all_items(self):
         items = []
@@ -185,18 +194,35 @@ class MessageTree(QTreeWidget):
 
         if hasattr(obj, '__slots__'):
             subobjs = [(slot, getattr(obj, slot)) for slot in obj.__slots__]
-        elif type(obj) in [list, tuple]:
-            len_obj = len(obj)
+            type_name = type(obj).__name__
+            quat_slots = ('_x', '_y', '_z', '_w')
+            if 'Quaternion' in type_name and all(s in obj.__slots__ for s in quat_slots):
+                roll, pitch, yaw = rpy_from_quaternion(obj.x, obj.y, obj.z, obj.w)
+                subobjs.append((ROLL_LABEL, '%.6f (%.3f°)' % (roll, math.degrees(roll))))
+                subobjs.append((PITCH_LABEL, '%.6f (%.3f°)' % (pitch, math.degrees(pitch))))
+                subobjs.append((YAW_LABEL, '%.6f (%.3f°)' % (yaw, math.degrees(yaw))))
+        elif type(obj) in (list, tuple, array.array, numpy.ndarray):
+            if type(obj) in (array.array, numpy.ndarray):
+                list_obj = obj.tolist()
+            else:
+                list_obj = obj
+            len_obj = len(list_obj)
+            short_list_obj = list_obj[:MAX_LIST_LEN]
             if len_obj == 0:
                 subobjs = []
             else:
                 w = int(math.ceil(math.log10(len_obj)))
-                subobjs = [('[%*d]' % (w, i), subobj) for (i, subobj) in enumerate(obj)]
+                subobjs = [('[%*d]' % (w, i), subobj) for (i, subobj) in enumerate(short_list_obj)]
+                if len_obj > MAX_LIST_LEN:
+                    subobjs.append(('[%s]' % (w * '.',), '{} items total'.format(len_obj)))
+                    for i in range(-LIST_TAIL_LEN, 0):
+                        if len_obj + i >= MAX_LIST_LEN:
+                            subobjs.append(('[%*d]' % (w, len_obj + i), list_obj[i]))
         else:
             subobjs = []
 
-        if type(obj) in [int, long, float]:
-            if type(obj) == float:
+        if type(obj) in (int, float):
+            if type(obj) is float:
                 obj_repr = '%.6f' % obj
             else:
                 obj_repr = str(obj)
@@ -206,9 +232,21 @@ class MessageTree(QTreeWidget):
             else:
                 label += ':  %s' % obj_repr
 
-        elif type(obj) in [str, bool, int, long, float, complex, Time]:
-            # Ignore any binary data
-            obj_repr = codecs.utf_8_decode(str(obj).encode(), 'ignore')[0]
+        elif type(obj) in (str, bool, int, float, complex, Time, TimeMsg, list, tuple,
+                           array.array, numpy.ndarray):
+            if type(obj) is array.array:
+                if obj.typecode == 'B':
+                    obj_repr = obj.tobytes().decode('utf-8', 'ignore')
+                elif obj.typecode == 'u':
+                    obj_repr = ''.join(obj.tolist())
+                else:
+                    obj_repr = '[' + ','.join(map(str, obj.tolist())) + ']'
+            elif type(obj) is Time:
+                obj_repr = '{:.9f}'.format(obj.nanoseconds * 1e-9)
+            elif type(obj) is TimeMsg:
+                obj_repr = '{:.9f}'.format(Time.from_msg(obj).nanoseconds * 1e-9)
+            else:
+                obj_repr = str(obj)
 
             # Truncate long representations
             if len(obj_repr) >= 50:
@@ -222,7 +260,7 @@ class MessageTree(QTreeWidget):
             self.addTopLevelItem(item)
         else:
             parent.addChild(item)
-        item.setData(0, Qt.UserRole, (path, obj_type))
+        item.setData(0, Qt.ItemDataRole.UserRole, (path, obj_type))
 
         for subobj_name, subobj in subobjs:
             if subobj is None:
