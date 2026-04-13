@@ -30,8 +30,7 @@ import threading
 import time
 from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
 
-from python_qt_binding.QtCore import qDebug, QTimer, qWarning, Signal
-from python_qt_binding.QtGui import QColorConstants
+from python_qt_binding.QtCore import qDebug, Qt, QTimer, qWarning, Signal
 from python_qt_binding.QtWidgets import QGraphicsScene, QMessageBox
 
 from rclpy.duration import Duration
@@ -109,7 +108,7 @@ class BagTimeline(QGraphicsScene):
         # the timeline renderer fixes use of black pens and fills, so ensure we fix white here for
         # contrast. Otherwise a dark qt theme will default it to black and the frame render
         # pen will be unreadable
-        self.setBackgroundBrush(QColorConstants.White)
+        self.setBackgroundBrush(Qt.white)
         self._timeline_frame = TimelineFrame(self)
         self._timeline_frame.setPos(0, 0)
         self.addItem(self._timeline_frame)
