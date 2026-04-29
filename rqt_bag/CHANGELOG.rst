@@ -2,14 +2,33 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.0.3 (2026-04-13)
+2.2.2 (2026-04-13)
 ------------------
-* fix setuptools deprecations (backport `#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_) (`#202 <https://github.com/ros-visualization/rqt_bag/issues/202>`_)
-* Better handling of large bag files (backport `#178 <https://github.com/ros-visualization/rqt_bag/issues/178>`_) (`#200 <https://github.com/ros-visualization/rqt_bag/issues/200>`_)
-* Display roll, pitch, yaw values for quaternions (backport `#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_) (`#198 <https://github.com/ros-visualization/rqt_bag/issues/198>`_)
-* Improved raw view to better handle arrays and time objects (backport `#173 <https://github.com/ros-visualization/rqt_bag/issues/173>`_) (`#193 <https://github.com/ros-visualization/rqt_bag/issues/193>`_)
-* plot_view: Fixed display of initial message (backport `#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_) (`#186 <https://github.com/ros-visualization/rqt_bag/issues/186>`_)
-* Contributors: mergify[bot]
+* Support Qt6 (`#206 <https://github.com/ros-visualization/rqt_bag/issues/206>`_)
+* Contributors: Alejandro Hernández Cordero
+
+2.2.1 (2025-11-24)
+------------------
+* Cleanup mislabeled BSD license (`#205 <https://github.com/ros-visualization/rqt_bag/issues/205>`_)
+* Contributors: Alejandro Hernández Cordero
+
+2.2.0 (2025-07-30)
+------------------
+* Better handling of large bag files (`#178 <https://github.com/ros-visualization/rqt_bag/issues/178>`_)
+* Display roll, pitch, yaw values for quaternions (`#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_)
+* Fix flake8 error in setup.py (`#192 <https://github.com/ros-visualization/rqt_bag/issues/192>`_)
+* Improved raw view to better handle arrays and time objects (`#173 <https://github.com/ros-visualization/rqt_bag/issues/173>`_)
+* plot_view: Fixed display of initial message (`#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_)
+* fix setuptools deprecations (`#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_)
+* Contributors: Martin Pecka, Michael Carlstrom, mosfet80
+
+2.1.1 (2025-07-01)
+------------------
+* Fixed timeline resolution (`#175 <https://github.com/ros-visualization/rqt_bag/issues/175>`_)
+* Contributors: Martin Pecka
+
+2.1.0 (2025-04-28)
+------------------
 
 2.0.2 (2025-01-07)
 ------------------
