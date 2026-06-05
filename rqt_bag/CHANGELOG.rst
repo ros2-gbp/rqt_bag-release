@@ -2,10 +2,16 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.2.3 (2026-05-13)
+2.3.2 (2026-06-05)
 ------------------
-* Fix Qt6 issues (backport `#207 <https://github.com/ros-visualization/rqt_bag/issues/207>`_) (`#208 <https://github.com/ros-visualization/rqt_bag/issues/208>`_)
-* Contributors: mergify[bot]
+
+2.3.1 (2026-05-13)
+------------------
+* Fix Qt6 issues (`#207 <https://github.com/ros-visualization/rqt_bag/issues/207>`_)
+* Contributors: Alejandro Hernández Cordero
+
+2.3.0 (2026-05-07)
+------------------
 
 2.2.2 (2026-04-13)
 ------------------
