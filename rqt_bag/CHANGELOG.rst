@@ -2,21 +2,18 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.3.3 (2026-06-18)
+2.2.5 (2026-06-18)
 ------------------
-* Modernizes python: super(), f-string and others (`#211 <https://github.com/ros-visualization/rqt_bag/issues/211>`_)
-* Contributors: Alejandro Hernández Cordero
+* Modernizes python: super(), f-string and others (backport `#211 <https://github.com/ros-visualization/rqt_bag/issues/211>`_) (`#212 <https://github.com/ros-visualization/rqt_bag/issues/212>`_)
+* Contributors: mergify[bot]
 
-2.3.2 (2026-06-05)
+2.2.4 (2026-06-05)
 ------------------
 
-2.3.1 (2026-05-13)
+2.2.3 (2026-05-13)
 ------------------
-* Fix Qt6 issues (`#207 <https://github.com/ros-visualization/rqt_bag/issues/207>`_)
-* Contributors: Alejandro Hernández Cordero
-
-2.3.0 (2026-05-07)
-------------------
+* Fix Qt6 issues (backport `#207 <https://github.com/ros-visualization/rqt_bag/issues/207>`_) (`#208 <https://github.com/ros-visualization/rqt_bag/issues/208>`_)
+* Contributors: mergify[bot]
 
 2.2.2 (2026-04-13)
 ------------------
