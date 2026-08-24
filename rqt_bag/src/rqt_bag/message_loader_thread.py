@@ -37,7 +37,7 @@ class MessageLoaderThread(threading.Thread):
     """
 
     def __init__(self, timeline, topic):
-        super().__init__()
+        threading.Thread.__init__(self)
 
         self.timeline = timeline
         self.topic = topic
@@ -50,7 +50,7 @@ class MessageLoaderThread(threading.Thread):
 
         self._stop_flag = False
 
-        self.daemon = True
+        self.setDaemon(True)
         self.start()
 
     def reset(self):

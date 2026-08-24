@@ -107,7 +107,7 @@ class PlotView(MessageView):
     name = 'Plot'
 
     def __init__(self, timeline, parent, topic):
-        super().__init__(timeline, topic)
+        super(PlotView, self).__init__(timeline, topic)
 
         self.plot_widget = PlotWidget(timeline, parent, topic)
 
@@ -128,7 +128,7 @@ class PlotView(MessageView):
 class PlotWidget(QWidget):
 
     def __init__(self, timeline, parent, topic):
-        super().__init__(parent)
+        super(PlotWidget, self).__init__(parent)
         self.setObjectName('PlotWidget')
 
         self.timeline = timeline
@@ -238,7 +238,7 @@ class PlotWidget(QWidget):
         self.resample_thread = threading.Thread(target=self._resample_thread)
         # explicitly mark our resampling thread as a daemon, because we don't
         # want to block program exit on a long resampling operation
-        self.resample_thread.daemon = True
+        self.resample_thread.setDaemon(True)
         self.resample_thread.start()
 
     def _resample_thread(self):
@@ -328,7 +328,7 @@ class PlotWidget(QWidget):
         # update the plot with final resampled data
         for path in self.resample_fields:
             if len(x[path]) < 1:
-                qWarning(f'Resampling resulted in 0 data points for {path}')
+                qWarning('Resampling resulted in 0 data points for %s' % path)
             else:
                 if path in self.paths_on:
                     self.plot.clear_values(path)
@@ -401,8 +401,8 @@ class PlotWidget(QWidget):
 class MessageTree(QTreeWidget):
 
     def __init__(self, msg_type, parent):
-        super().__init__(parent)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        super(MessageTree, self).__init__(parent)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setHeaderHidden(False)
         self.itemChanged.connect(self.handleChanged)
         self._msg_type = msg_type
@@ -430,7 +430,7 @@ class MessageTree(QTreeWidget):
                     self._expanded_paths.add(path)
                 elif path in self._expanded_paths:
                     self._expanded_paths.remove(path)
-                if item.checkState(0) == Qt.CheckState.Checked:
+                if item.checkState(0) == Qt.Checked:
                     self._checked_states.add(path)
                 elif path in self._checked_states:
                     self._checked_states.remove(path)
@@ -455,7 +455,7 @@ class MessageTree(QTreeWidget):
 
     def get_item_path(self, item):
         # remove spaces that may get introduced in indexing, e.g. [  3] is [3]
-        return item.data(0, Qt.ItemDataRole.UserRole)[0].replace(' ', '')
+        return item.data(0, Qt.UserRole)[0].replace(' ', '')
 
     def get_all_items(self):
         items = []
@@ -538,10 +538,10 @@ class MessageTree(QTreeWidget):
             parent.addChild(item)
         if plotitem:
             if path.replace(' ', '') in self._checked_states:
-                item.setCheckState(0, Qt.CheckState.Checked)
+                item.setCheckState(0, Qt.Checked)
             else:
-                item.setCheckState(0, Qt.CheckState.Unchecked)
-        item.setData(0, Qt.ItemDataRole.UserRole, (path, obj_type))
+                item.setCheckState(0, Qt.Unchecked)
+        item.setData(0, Qt.UserRole, (path, obj_type))
 
         for subobj_name, subobj in subobjs:
             if subobj is None:
@@ -563,7 +563,7 @@ class MessageTree(QTreeWidget):
 
     # Keyboard handler
     def on_key_press(self, event):
-        key, ctrl = event.key(), event.modifiers() & Qt.KeyboardModifier.ControlModifier
+        key, ctrl = event.key(), event.modifiers() & Qt.ControlModifier
         if ctrl:
             if key == ord('C') or key == ord('c'):
                 # Ctrl-C: copy text from selected items to clipboard
@@ -575,7 +575,7 @@ class MessageTree(QTreeWidget):
                 self.selectAll()
 
     def handleChanged(self, item, column):
-        if item.data(0, Qt.ItemDataRole.UserRole) is None:
+        if item.data(0, Qt.UserRole) is None:
             pass
         else:
             # Strip the leading underscore from each of the path segments
@@ -583,11 +583,11 @@ class MessageTree(QTreeWidget):
             segments = [seg[1:] if seg[0] == '_' else seg for seg in split_item_path]
             path = '.'.join(segments)
 
-            if item.checkState(column) == Qt.CheckState.Checked:
+            if item.checkState(column) == Qt.Checked:
                 if path not in self.plot_list:
                     self.plot_list.add(path)
                     self.parent().parent().parent().add_plot(path)
-            if item.checkState(column) == Qt.CheckState.Unchecked:
+            if item.checkState(column) == Qt.Unchecked:
                 if path in self.plot_list:
                     self.plot_list.remove(path)
                     self.parent().parent().parent().remove_plot(path)

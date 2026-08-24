@@ -38,10 +38,10 @@ class IndexCacheThread(threading.Thread):
     """
 
     def __init__(self, timeline):
-        super().__init__()
+        threading.Thread.__init__(self)
         self.timeline = timeline
         self._stop_flag = False
-        self.daemon = True
+        self.setDaemon(True)
         self.start()
 
     def run(self):

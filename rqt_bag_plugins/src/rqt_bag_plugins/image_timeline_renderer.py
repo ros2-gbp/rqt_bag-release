@@ -40,7 +40,8 @@ if (
 ):
     sys.modules['PyQt5'] = None
 
-from python_qt_binding.QtGui import QBrush, QColorConstants, QPen, QPixmap
+from python_qt_binding.QtCore import Qt
+from python_qt_binding.QtGui import QBrush, QPen, QPixmap
 
 from rclpy.time import Time
 
@@ -54,7 +55,7 @@ class ImageTimelineRenderer(TimelineRenderer):
     """Draws thumbnails of sensor_msgs/msg/{Compressed}Image in the timeline."""
 
     def __init__(self, timeline, thumbnail_height=160):
-        super().__init__(timeline, msg_combine_px=40.0)
+        super(ImageTimelineRenderer, self).__init__(timeline, msg_combine_px=40.0)
 
         self.thumbnail_height = thumbnail_height
         # use cached thumbnail if it's less than this many pixels away
@@ -94,7 +95,7 @@ class ImageTimelineRenderer(TimelineRenderer):
         thumbnail_x, thumbnail_y, thumbnail_height = x + 1, y + 1, height - 2 - thumbnail_gap
 
         # set color to white draw rectangle over messages
-        painter.setBrush(QBrush(QColorConstants.White))
+        painter.setBrush(QBrush(Qt.white))
         painter.drawRect(int(x), int(y), int(width), int(height - thumbnail_gap))
         thumbnail_width = None
 
@@ -135,8 +136,8 @@ class ImageTimelineRenderer(TimelineRenderer):
             if width == 1:
                 break
 
-        painter.setPen(QPen(QColorConstants.Black))
-        painter.setBrush(QBrush(QColorConstants.Transparent))
+        painter.setPen(QPen(Qt.black))
+        painter.setBrush(QBrush(Qt.transparent))
         if width == 1:
             painter.drawRect(int(x), int(y), int(thumbnail_x - x), int(height - thumbnail_gap - 1))
         else:
@@ -164,11 +165,11 @@ class ImageTimelineRenderer(TimelineRenderer):
         try:
             pil_image = image_helper.imgmsg_to_pil(ros_message, msg_type)
         except Exception as ex:
-            print(f'Error loading image on topic {topic}: {str(ex)}', file=sys.stderr)
+            print('Error loading image on topic %s: %s' % (topic, str(ex)), file=sys.stderr)
             pil_image = None
 
         if not pil_image:
-            print(f'Disabling renderer on {topic}', file=sys.stderr)
+            print('Disabling renderer on %s' % topic, file=sys.stderr)
             self.timeline.set_renderer_active(topic, False)
             return None, None
 
@@ -183,5 +184,6 @@ class ImageTimelineRenderer(TimelineRenderer):
             return t, thumbnail
 
         except Exception as ex:
-            print(f'Error loading image on topic {topic}: {str(ex)}', file=sys.stderr)
+            print('Error loading image on topic %s: %s' % (topic, str(ex)), file=sys.stderr)
             raise
+            return None, None

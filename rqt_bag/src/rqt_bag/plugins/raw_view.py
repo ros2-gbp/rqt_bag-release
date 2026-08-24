@@ -67,15 +67,15 @@ class RawView(TopicMessageView):
         :param timeline: timeline data object, ''BagTimeline''
         :param parent: widget that will be added to the ros_gui context, ''QWidget''
         """
-        super().__init__(timeline, parent, topic)
+        super(RawView, self).__init__(timeline, parent, topic)
         self.message_tree = MessageTree(parent)
 
         # This will automatically resize the message_tree to the windowsize
         parent.layout().addWidget(self.message_tree)
 
     def message_viewed(self, *, entry, ros_message, msg_type_name, **kwargs):
-        super().message_viewed(
-            entry=entry, ros_message=ros_message, msg_type_name=msg_type_name)
+        super(RawView, self).message_viewed(entry=entry,
+                                            ros_message=ros_message, msg_type_name=msg_type_name)
         if ros_message is None:
             self.message_cleared()
         else:
@@ -89,11 +89,11 @@ class RawView(TopicMessageView):
 class MessageTree(QTreeWidget):
 
     def __init__(self, parent):
-        super().__init__(parent)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        super(MessageTree, self).__init__(parent)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setHeaderHidden(False)
         self.setHeaderLabel('')
-        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self._msg = None
 
         self._expanded_paths = None
@@ -142,7 +142,7 @@ class MessageTree(QTreeWidget):
 
     # Keyboard handler
     def on_key_press(self, event):
-        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+        if event.modifiers() & Qt.ControlModifier:
             key = event.key()
             if key == ord('C') or key == ord('c'):
                 # Ctrl-C: copy text from selected items to clipboard
@@ -171,7 +171,7 @@ class MessageTree(QTreeWidget):
 
     def get_item_path(self, item):
         # remove spaces that may get introduced in indexing, e.g. [  3] is [3]
-        return item.data(0, Qt.ItemDataRole.UserRole)[0].replace(' ', '')
+        return item.data(0, Qt.UserRole)[0].replace(' ', '')
 
     def get_all_items(self):
         items = []
@@ -214,7 +214,7 @@ class MessageTree(QTreeWidget):
                 w = int(math.ceil(math.log10(len_obj)))
                 subobjs = [('[%*d]' % (w, i), subobj) for (i, subobj) in enumerate(short_list_obj)]
                 if len_obj > MAX_LIST_LEN:
-                    subobjs.append((f'[{w * "."}]', f'{len_obj} items total'))
+                    subobjs.append(('[%s]' % (w * '.',), '{} items total'.format(len_obj)))
                     for i in range(-LIST_TAIL_LEN, 0):
                         if len_obj + i >= MAX_LIST_LEN:
                             subobjs.append(('[%*d]' % (w, len_obj + i), list_obj[i]))
@@ -242,9 +242,9 @@ class MessageTree(QTreeWidget):
                 else:
                     obj_repr = '[' + ','.join(map(str, obj.tolist())) + ']'
             elif type(obj) is Time:
-                obj_repr = f'{obj.nanoseconds * 1e-9:.9f}'
+                obj_repr = '{:.9f}'.format(obj.nanoseconds * 1e-9)
             elif type(obj) is TimeMsg:
-                obj_repr = f'{Time.from_msg(obj).nanoseconds * 1e-9:.9f}'
+                obj_repr = '{:.9f}'.format(Time.from_msg(obj).nanoseconds * 1e-9)
             else:
                 obj_repr = str(obj)
 
@@ -260,7 +260,7 @@ class MessageTree(QTreeWidget):
             self.addTopLevelItem(item)
         else:
             parent.addChild(item)
-        item.setData(0, Qt.ItemDataRole.UserRole, (path, obj_type))
+        item.setData(0, Qt.UserRole, (path, obj_type))
 
         for subobj_name, subobj in subobjs:
             if subobj is None:

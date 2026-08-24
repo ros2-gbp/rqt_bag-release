@@ -2,48 +2,17 @@
 Changelog for package rqt_bag_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.3.4 (2026-08-24)
+2.0.4 (2026-08-24)
 ------------------
 
-2.3.3 (2026-06-18)
+2.0.3 (2026-04-13)
 ------------------
-* Modernizes python: super(), f-string and others (`#211 <https://github.com/ros-visualization/rqt_bag/issues/211>`_)
-* Contributors: Alejandro Hernández Cordero
-
-2.3.2 (2026-06-05)
-------------------
-* Qt6 fixes (`#209 <https://github.com/ros-visualization/rqt_bag/issues/209>`_)
-* Contributors: Alejandro Hernández Cordero
-
-2.3.1 (2026-05-13)
-------------------
-
-2.3.0 (2026-05-07)
-------------------
-
-2.2.2 (2026-04-13)
-------------------
-* Support Qt6 (`#206 <https://github.com/ros-visualization/rqt_bag/issues/206>`_)
-* Contributors: Alejandro Hernández Cordero
-
-2.2.1 (2025-11-24)
-------------------
-
-2.2.0 (2025-07-30)
-------------------
-* Display roll, pitch, yaw values for quaternions (`#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_)
-* Fix flake8 error in setup.py (`#192 <https://github.com/ros-visualization/rqt_bag/issues/192>`_)
-* Fixed image helper and added support for PNG-coded compressedDepth (`#176 <https://github.com/ros-visualization/rqt_bag/issues/176>`_)
-* Improve plot view (`#174 <https://github.com/ros-visualization/rqt_bag/issues/174>`_)
-* plot_view: Fixed display of initial message (`#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_)
-* fix setuptools deprecations (`#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_)
-* Contributors: Martin Pecka, Michael Carlstrom, mosfet80
-
-2.1.1 (2025-07-01)
-------------------
-
-2.1.0 (2025-04-28)
-------------------
+* fix setuptools deprecations (backport `#185 <https://github.com/ros-visualization/rqt_bag/issues/185>`_) (`#202 <https://github.com/ros-visualization/rqt_bag/issues/202>`_)
+* Display roll, pitch, yaw values for quaternions (backport `#179 <https://github.com/ros-visualization/rqt_bag/issues/179>`_) (`#198 <https://github.com/ros-visualization/rqt_bag/issues/198>`_)
+* Fixed image helper and added support for PNG-coded compressedDepth (backport `#176 <https://github.com/ros-visualization/rqt_bag/issues/176>`_) (`#190 <https://github.com/ros-visualization/rqt_bag/issues/190>`_)
+* Improve plot view (backport `#174 <https://github.com/ros-visualization/rqt_bag/issues/174>`_) (`#188 <https://github.com/ros-visualization/rqt_bag/issues/188>`_)
+* plot_view: Fixed display of initial message (backport `#180 <https://github.com/ros-visualization/rqt_bag/issues/180>`_) (`#186 <https://github.com/ros-visualization/rqt_bag/issues/186>`_)
+* Contributors: mergify[bot]
 
 2.0.2 (2025-01-07)
 ------------------
