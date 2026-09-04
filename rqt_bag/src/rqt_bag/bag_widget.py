@@ -49,7 +49,7 @@ from .topic_selection import TopicSelection
 class BagGraphicsView(QGraphicsView):
 
     def __init__(self, parent=None):
-        super(BagGraphicsView, self).__init__()
+        super().__init__()
 
 
 class BagWidget(QWidget):
@@ -70,7 +70,7 @@ class BagWidget(QWidget):
         :param context: plugin context hook to enable adding widgets as a ROS_GUI pane,
             ''PluginContext''
         """
-        super(BagWidget, self).__init__()
+        super().__init__()
         self._node = context.node
         self._logger = logging.get_logger('rqt_bag.BagWidget')
         _, package_path = get_resource('packages', 'rqt_bag')
@@ -145,7 +145,8 @@ class BagWidget(QWidget):
     def graphics_view_on_key_press(self, event):
         key = event.key()
         if key in (
-                Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down, Qt.Key_PageUp, Qt.Key_PageDown):
+                Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down,
+                Qt.Key.Key_PageUp, Qt.Key.Key_PageDown):
             # This causes the graphics view to ignore these keys so they can be caught
             # by the bag_widget keyPressEvent
             event.ignore()
@@ -156,23 +157,23 @@ class BagWidget(QWidget):
     # callbacks for ui events
     def on_key_press(self, event):
         key = event.key()
-        if key == Qt.Key_Space:
+        if key == Qt.Key.Key_Space:
             self._timeline.toggle_play()
-        elif key == Qt.Key_Home:
+        elif key == Qt.Key.Key_Home:
             self._timeline.navigate_start()
-        elif key == Qt.Key_End:
+        elif key == Qt.Key.Key_End:
             self._handle_end_clicked()
-        elif key == Qt.Key_Plus or key == Qt.Key_Equal:
+        elif key == Qt.Key.Key_Plus or key == Qt.Key.Key_Equal:
             self._handle_faster_clicked()
-        elif key == Qt.Key_Minus:
+        elif key == Qt.Key.Key_Minus:
             self._handle_slower_clicked()
-        elif key == Qt.Key_Left:
+        elif key == Qt.Key.Key_Left:
             self._timeline.translate_timeline_left()
-        elif key == Qt.Key_Right:
+        elif key == Qt.Key.Key_Right:
             self._timeline.translate_timeline_right()
-        elif key == Qt.Key_Up or key == Qt.Key_PageUp:
+        elif key == Qt.Key.Key_Up or key == Qt.Key.Key_PageUp:
             self._handle_zoom_in_clicked()
-        elif key == Qt.Key_Down or key == Qt.Key_PageDown:
+        elif key == Qt.Key.Key_Down or key == Qt.Key.Key_PageDown:
             self._handle_zoom_out_clicked()
 
     def handle_destroy(self, args):
@@ -273,8 +274,8 @@ class BagWidget(QWidget):
         # Create a dialog explicitly so that we can set options on it. We're currently using
         # a native dialog which is not able to multi-select directories
         dialog = QFileDialog(self)
-        dialog.setFileMode(QFileDialog.Directory)
-        dialog.setOption(QFileDialog.ShowDirsOnly, True)
+        dialog.setFileMode(QFileDialog.FileMode.Directory)
+        dialog.setOption(QFileDialog.Option.ShowDirsOnly, True)
 
         if not dialog.exec():
             return
@@ -285,13 +286,13 @@ class BagWidget(QWidget):
             self.load_bag(filename)
 
     def load_bag(self, filename):
-        qDebug("Loading '%s' ..." % filename.encode(errors='replace'))
+        qDebug(f"Loading '{filename.encode(errors='replace')}' ...")
 
         # QProgressBar can EITHER: show text or show a bouncing loading bar,
         #  but apparently the text is hidden when the bounding loading bar is
         #  shown
         # self.progress_bar.setRange(0, 0)
-        self.set_status_text.emit("Loading '%s' ..." % os.path.split(filename)[0])
+        self.set_status_text.emit(f"Loading '{os.path.split(filename)[0]}' ...")
         # progress_format = self.progress_bar.format()
         # progress_text_visible = self.progress_bar.isTextVisible()
         # self.progress_bar.setFormat("Loading %s" % filename)
@@ -300,11 +301,11 @@ class BagWidget(QWidget):
         try:
             bag = Rosbag2(filename)
         except Exception as e:
-            qWarning("Loading '%s' failed due to: %s" % (filename.encode(errors='replace'), e))
-            self.set_status_text.emit("Loading '%s' failed due to: %s" % (filename, e))
+            qWarning(f"Loading '{filename.encode(errors='replace')}' failed due to: {e}")
+            self.set_status_text.emit(f"Loading '{filename}' failed due to: {e}")
             return
 
-        qDebug('Loading bag from metadata file "{}" Succeeded'.format(filename))
+        qDebug(f'Loading bag from metadata file "{filename}" Succeeded')
 
         self.play_button.setEnabled(True)
         self.thumbs_button.setEnabled(True)
@@ -320,7 +321,7 @@ class BagWidget(QWidget):
         self.save_button.setEnabled(False)
         self.record_button.setEnabled(False)
         self._timeline.add_bag(bag)
-        qDebug("Done loading '%s'" % filename.encode(errors='replace'))
+        qDebug(f"Done loading '{filename.encode(errors='replace')}'")
         # put the progress bar back the way it was
         self.set_status_text.emit('')
         # reset zoom to show entirety of all loaded bags
@@ -421,7 +422,7 @@ class BagWidget(QWidget):
                     spd_str = '> 1/%.0fx' % (1.0 / spd)
                 elif spd > -1.0:
                     spd_str = '< 1/%.0fx' % (1.0 / -spd)
-                elif spd == 1.0:
+                elif spd == -1.0:
                     spd_str = '<'
                 else:
                     spd_str = '<< %.0fx' % -spd
@@ -441,7 +442,7 @@ class BagWidget(QWidget):
     def on_mousewheel(self, event):
         # scroll -> scroll the page up and down
         # ctrl+scroll -> zoom-in or zoom out timeline
-        if event.modifiers() & Qt.ControlModifier:
+        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             self._timeline._timeline_frame.on_mousewheel(event)
         else:
             BagGraphicsView.wheelEvent(self.graphics_view, event)

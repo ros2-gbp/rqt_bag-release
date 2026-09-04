@@ -28,17 +28,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-
 from PIL import Image
-
-# HACK workaround for upstream pillow issue python-pillow/Pillow#400
-from python_qt_binding import QT_BINDING_MODULES
-if (
-    not QT_BINDING_MODULES['QtCore'].__name__.startswith('PyQt5') and
-    'PyQt5' in sys.modules
-):
-    sys.modules['PyQt5'] = None
 
 from python_qt_binding.QtGui import QPixmap
 from python_qt_binding.QtWidgets import QGraphicsScene, QGraphicsView
@@ -54,7 +44,7 @@ class ImageView(TopicMessageView):
     name = 'Image'
 
     def __init__(self, timeline, parent, topic):
-        super(ImageView, self).__init__(timeline, parent, topic)
+        super().__init__(timeline, parent, topic)
 
         self._image = None
         self._image_topic = None

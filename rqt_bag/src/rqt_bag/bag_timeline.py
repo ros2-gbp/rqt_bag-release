@@ -30,7 +30,8 @@ import threading
 import time
 from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
 
-from python_qt_binding.QtCore import qDebug, Qt, QTimer, qWarning, Signal
+from python_qt_binding.QtCore import qDebug, QTimer, qWarning, Signal
+from python_qt_binding.QtGui import QColorConstants
 from python_qt_binding.QtWidgets import QGraphicsScene, QMessageBox
 
 from rclpy.duration import Duration
@@ -66,7 +67,7 @@ class BagTimeline(QGraphicsScene):
             plugin context hook to enable adding rqt_bag plugin widgets as ROS_GUI snapin panes,
             ''PluginContext''
         """
-        super(BagTimeline, self).__init__()
+        super().__init__()
         self._bags = []
         self._bag_lock = threading.RLock()
         self._bags_size = 0
@@ -108,7 +109,7 @@ class BagTimeline(QGraphicsScene):
         # the timeline renderer fixes use of black pens and fills, so ensure we fix white here for
         # contrast. Otherwise a dark qt theme will default it to black and the frame render
         # pen will be unreadable
-        self.setBackgroundBrush(Qt.white)
+        self.setBackgroundBrush(QColorConstants.White)
         self._timeline_frame = TimelineFrame(self)
         self._timeline_frame.setPos(0, 0)
         self.addItem(self._timeline_frame)
@@ -164,7 +165,7 @@ class BagTimeline(QGraphicsScene):
         self._bags_size += bag.size()
 
         bag_topics = bag.get_topics()
-        qDebug('Topics from this bag: {}'.format(bag_topics))
+        qDebug(f'Topics from this bag: {bag_topics}')
 
         new_topics = set(bag_topics) - set(self._timeline_frame.topics)
 
@@ -456,8 +457,9 @@ class BagTimeline(QGraphicsScene):
         """
         if self.background_task is not None:
             QMessageBox(
-                QMessageBox.Warning, 'Exclamation', 'Background operation already running:\n\n%s' %
-                self.background_task, QMessageBox.Ok).exec_()
+                QMessageBox.Icon.Warning, 'Exclamation',
+                'Background operation already running:\n\n%s' % self.background_task,
+                QMessageBox.StandardButton.Ok).exec()
             return False
 
         self.background_task = background_task
@@ -495,8 +497,8 @@ class BagTimeline(QGraphicsScene):
 
         # If no messages, prompt the user and return
         if total_messages == 0:
-            QMessageBox(QMessageBox.Warning, 'rqt_bag', 'No messages found',
-                        QMessageBox.Ok).exec_()
+            QMessageBox(QMessageBox.Icon.Warning, 'rqt_bag', 'No messages found',
+                        QMessageBox.StandardButton.Ok).exec()
             self.stop_background_task()
             return
 
@@ -511,8 +513,9 @@ class BagTimeline(QGraphicsScene):
             rosbag_writer = rosbag2_py.SequentialWriter()
             rosbag_writer.open(storage_options, converter_options)
         except Exception:
-            QMessageBox(QMessageBox.Warning, 'rqt_bag',
-                        'Error opening bag file [%s] for writing' % path, QMessageBox.Ok).exec_()
+            QMessageBox(QMessageBox.Icon.Warning, 'rqt_bag',
+                        'Error opening bag file [%s] for writing' % path,
+                        QMessageBox.StandardButton.Ok).exec()
             self.stop_background_task()
             return
 
@@ -553,8 +556,7 @@ class BagTimeline(QGraphicsScene):
                 # Then write it out
                 rosbag_writer.write(entry.topic, entry.data, entry.timestamp)
             except Exception as ex:
-                qWarning('Error exporting message at position %s: %s' %
-                         (str(entry.timestamp), str(ex)))
+                qWarning(f'Error exporting message at position {str(entry.timestamp)}: {str(ex)}')
                 self.stop_background_task()
                 return
 
@@ -573,8 +575,8 @@ class BagTimeline(QGraphicsScene):
             self.background_progress = 0
             self.status_bar_changed_signal.emit()
         except Exception as ex:
-            QMessageBox(QMessageBox.Warning, 'rqt_bag', 'Error closing bag file [%s]: %s' % (
-                export_filename, str(ex)), QMessageBox.Ok).exec_()
+            QMessageBox(QMessageBox.Icon.Warning, 'rqt_bag', 'Error closing bag file [%s]: %s' % (
+                export_filename, str(ex)), QMessageBox.StandardButton.Ok).exec()
         self.stop_background_task()
 
     def read_message(self, bag, position, topic):
@@ -623,7 +625,7 @@ class BagTimeline(QGraphicsScene):
                 if self._publish_clock:
                     self._player.start_clock_publishing()
             except Exception as ex:
-                qWarning('Error starting player; aborting publish: %s' % str(ex))
+                qWarning(f'Error starting player; aborting publish: {str(ex)}')
                 return False
 
         return True
@@ -753,7 +755,7 @@ class BagTimeline(QGraphicsScene):
                                       all_topics=all_topics, topics=topics,
                                       regex=regex, limit=limit)
         except Exception as ex:
-            qWarning('Error opening bag for recording [%s]: %s' % (filename, str(ex)))
+            qWarning(f'Error opening bag for recording [{filename}]: {str(ex)}')
             return
 
         self._recorder.add_listener(self._message_recorded)

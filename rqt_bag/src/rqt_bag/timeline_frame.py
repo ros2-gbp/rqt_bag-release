@@ -31,7 +31,7 @@ import threading
 from typing import Callable, Iterable, Optional, Union
 
 from python_qt_binding.QtCore import qDebug, QPointF, QRectF, Qt, qWarning, Slot
-from python_qt_binding.QtGui import QBrush, QColor, QCursor, QFont, \
+from python_qt_binding.QtGui import QBrush, QColor, QColorConstants, QCursor, QFont, \
     QFontMetrics, QPalette, QPen, QPolygonF
 from python_qt_binding.QtWidgets import QCheckBox, QGraphicsItem
 
@@ -89,7 +89,7 @@ class TimelineFrame(QGraphicsItem):
     """
 
     def __init__(self, bag_timeline):
-        super(TimelineFrame, self).__init__()
+        super().__init__()
         self._bag_timeline = bag_timeline
         self._clicked_pos = None
         self._dragged_pos = None
@@ -129,8 +129,9 @@ class TimelineFrame(QGraphicsItem):
         self._minor_spacing = 15
         self._major_spacing = 50
         self._major_divisions_label_indent = 3  # padding in px between line and label
-        self._major_division_pen = QPen(QBrush(Qt.black), 0, Qt.DashLine)
-        self._minor_division_pen = QPen(QBrush(QColor(153, 153, 153, 128)), 0, Qt.DashLine)
+        self._major_division_pen = QPen(QBrush(QColorConstants.Black), 0, Qt.PenStyle.DashLine)
+        self._minor_division_pen = QPen(
+                QBrush(QColor(153, 153, 153, 128)), 0, Qt.PenStyle.DashLine)
         self._minor_division_tick_pen = QPen(QBrush(QColor(128, 128, 128, 128)), 0)
 
         # Topic Rendering
@@ -160,8 +161,8 @@ class TimelineFrame(QGraphicsItem):
         self._time_font.setBold(False)
 
         # Defaults
-        self._default_brush = QBrush(Qt.black, Qt.SolidPattern)
-        self._default_pen = QPen(Qt.black)
+        self._default_brush = QBrush(QColorConstants.Black, Qt.BrushStyle.SolidPattern)
+        self._default_pen = QPen(QColorConstants.Black)
         self._default_datatype_color = QColor(0, 0, 102, 204)
         self._datatype_colors = {
             'sensor_msgs/msg/CameraInfo': QColor(0, 0, 77, 204),
@@ -233,7 +234,7 @@ class TimelineFrame(QGraphicsItem):
             if self._playhead is not None and playhead == self._playhead:
                 return
 
-            qDebug('Setting playhead {}'.format(playhead))
+            qDebug(f'Setting playhead {playhead}')
             self._playhead = playhead
             if self._playhead != self._end_stamp:
                 self.scene().stick_to_end = False
@@ -327,7 +328,7 @@ class TimelineFrame(QGraphicsItem):
     # Drawing Functions
 
     def _qfont_width(self, name):
-        return QFontMetrics(self._topic_font).width(name)
+        return QFontMetrics(self._topic_font).boundingRect(name).width()
 
     def _trimmed_topic_name(self, topic_name):
         """Trim the topic name down to a reasonable percentage of the viewable scene area."""
@@ -545,10 +546,10 @@ class TimelineFrame(QGraphicsItem):
             (x, y, w, h) = self._history_bounds[topic]
 
             if row % 2 == 0:
-                painter.setPen(Qt.lightGray)
+                painter.setPen(QColorConstants.LightGray)
                 painter.setBrush(QBrush(self._history_background_color_alternate))
             else:
-                painter.setPen(Qt.lightGray)
+                painter.setPen(QColorConstants.LightGray)
                 painter.setBrush(QBrush(self._history_background_color))
             left = max(clip_left, x)
             painter.drawRect(left, y, min(clip_right - left, w), h)
@@ -581,12 +582,12 @@ class TimelineFrame(QGraphicsItem):
         painter.drawRect(left, top, width, height)
 
         painter.setPen(self._selected_region_outline_ends_color)
-        painter.setBrush(Qt.NoBrush)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawLine(left, top, left, top + height)
         painter.drawLine(left + width, top, left + width, top + height)
 
         painter.setPen(self._selected_region_outline_top_color)
-        painter.setBrush(Qt.NoBrush)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawLine(left, top, left + width, top)
 
         painter.setPen(self._selected_region_outline_top_color)
@@ -633,8 +634,8 @@ class TimelineFrame(QGraphicsItem):
         x, y, w, h = self._history_left, self._history_top, bounds_width, self._history_bottom - \
             self._history_top
 
-        painter.setBrush(Qt.NoBrush)
-        painter.setPen(Qt.black)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QColorConstants.Black)
         painter.drawRect(x, y, w, h)
         painter.setBrush(self._default_brush)
         painter.setPen(self._default_pen)
@@ -647,8 +648,8 @@ class TimelineFrame(QGraphicsItem):
         """
         for topic, bounds in self._history_bounds.items():
             _, y, _, h = bounds
-            highlight_color = self.scene().palette().color(QPalette.Highlight)
-            highlight_pen_color = self.scene().palette().color(QPalette.HighlightedText)
+            highlight_color = self.scene().palette().color(QPalette.ColorRole.Highlight)
+            highlight_pen_color = self.scene().palette().color(QPalette.ColorRole.HighlightedText)
             if topic == self._highlighted_topic:
                 painter.setBrush(QBrush(highlight_color))
                 painter.setPen(QPen(highlight_pen_color))
@@ -660,7 +661,7 @@ class TimelineFrame(QGraphicsItem):
                 painter.setPen(self._default_pen)
                 painter.setBrush(self._default_brush)
             if not self._bag_timeline.is_publishing(topic):
-                painter.setBrush(QBrush(Qt.NoBrush))
+                painter.setBrush(QBrush(Qt.BrushStyle.NoBrush))
             painter.setFont(self._topic_font)
             shown_topic_name = self._trimmed_topic_name(topic)
             painter.drawText(
@@ -668,7 +669,7 @@ class TimelineFrame(QGraphicsItem):
                 int(y + h / 2 - self._topic_font_height / 2),
                 self._qfont_width(shown_topic_name),
                 self._topic_font_height,
-                Qt.AlignVCenter,
+                Qt.AlignmentFlag.AlignVCenter,
                 shown_topic_name)
             if topic not in self._checkbox_widgets:
                 @Slot(bool)
@@ -786,15 +787,16 @@ class TimelineFrame(QGraphicsItem):
                 plugin = self.plugin_provider.load(
                     plugin_descriptor.plugin_id(), plugin_context=None)
             except Exception as e:
-                qWarning('rqt_bag.TimelineFrame.load_plugins() failed to load plugin "%s":\n%s' %
-                         (plugin_descriptor.plugin_id(), e))
+                qWarning(
+                    'rqt_bag.TimelineFrame.load_plugins() failed to load plugin '
+                    f'"{plugin_descriptor.plugin_id()}":\n{e}')
                 continue
             try:
                 view = plugin.get_view_class()
             except Exception as e:
                 qWarning(
                     'rqt_bag.TimelineFrame.load_plugins() failed to get view '
-                    'from plugin "%s":\n%s' % (plugin_descriptor.plugin_id(), e))
+                    f'from plugin "{plugin_descriptor.plugin_id()}":\n{e}')
                 continue
 
             timeline_renderer = None
@@ -805,7 +807,7 @@ class TimelineFrame(QGraphicsItem):
             except Exception as e:
                 qWarning(
                     'rqt_bag.TimelineFrame.load_plugins() failed to get renderer '
-                    'from plugin "%s":\n%s' % (plugin_descriptor.plugin_id(), e))
+                    f'from plugin "{plugin_descriptor.plugin_id()}":\n{e}')
 
             msg_types = []
             try:
@@ -815,20 +817,21 @@ class TimelineFrame(QGraphicsItem):
             except Exception as e:
                 qWarning(
                     'rqt_bag.TimelineFrame.load_plugins() failed to get message types '
-                    'from plugin "%s":\n%s' % (plugin_descriptor.plugin_id(), e))
+                    f'from plugin "{plugin_descriptor.plugin_id()}":\n{e}')
             finally:
                 if not msg_types:
                     qWarning(
-                        'rqt_bag.TimelineFrame.load_plugins() plugin "%s" declares '
-                        'no message types.' % (plugin_descriptor.plugin_id()))
+                        'rqt_bag.TimelineFrame.load_plugins() plugin '
+                        f'"{plugin_descriptor.plugin_id()}" declares no message types.')
 
             for msg_type in msg_types:
                 self._viewer_types.setdefault(msg_type, []).append(view)
                 if timeline_renderer:
                     self._timeline_renderers[msg_type] = timeline_renderer(self)
 
-            qDebug('rqt_bag.TimelineFrame.load_plugins() loaded plugin "%s"' %
-                   plugin_descriptor.plugin_id())
+            qDebug(
+                f'rqt_bag.TimelineFrame.load_plugins() loaded plugin '
+                f'"{plugin_descriptor.plugin_id()}"')
 
     # Timeline renderer interaction functions
 
@@ -1014,11 +1017,11 @@ class TimelineFrame(QGraphicsItem):
 
         if clamp_to_visible:
             if fraction <= 0.0:
-                return int(self._stamp_left)
+                return self._stamp_left
             elif fraction >= 1.0:
-                return int(self._stamp_right)
+                return self._stamp_right
 
-        return int(self._stamp_left + fraction * (self._stamp_right - self._stamp_left))
+        return self._stamp_left + fraction * (self._stamp_right - self._stamp_left)
 
     def map_dx_to_dstamp(self, dx):
         """
@@ -1079,7 +1082,7 @@ class TimelineFrame(QGraphicsItem):
             self.playhead = Time(seconds=self._stamp_left)
 
     def set_timeline_view(self, stamp_left, stamp_right):
-        qDebug('Setting timeline left: {} right: {}'.format(stamp_left, stamp_right))
+        qDebug(f'Setting timeline left: {stamp_left} right: {stamp_right}')
         self._stamp_left = stamp_left
         self._stamp_right = stamp_right
 
@@ -1196,7 +1199,7 @@ class TimelineFrame(QGraphicsItem):
 
         self.pause()
 
-        if event.modifiers() == Qt.ShiftModifier:
+        if event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
             return
 
         x = self._clicked_pos.x()
@@ -1231,7 +1234,7 @@ class TimelineFrame(QGraphicsItem):
                         self.scene().update()
                     self.emit_play_region()
                 elif self._selecting_mode == _SelectionMode.SHIFTING:
-                    self.scene().views()[0].setCursor(QCursor(Qt.ClosedHandCursor))
+                    self.scene().views()[0].setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
 
     def on_mouse_up(self, event):
         self.resume()
@@ -1245,7 +1248,7 @@ class TimelineFrame(QGraphicsItem):
                 self._selecting_mode = _SelectionMode.NONE
             else:
                 self._selecting_mode = _SelectionMode.MARKED
-        self.scene().views()[0].setCursor(QCursor(Qt.ArrowCursor))
+        self.scene().views()[0].setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         self.scene().update()
 
     def on_mousewheel(self, event):
@@ -1263,7 +1266,7 @@ class TimelineFrame(QGraphicsItem):
         x = event.scenePos().x()
         y = event.scenePos().y()
 
-        if event.buttons() == Qt.NoButton:
+        if event.buttons() == Qt.MouseButton.NoButton:
             # Mouse moving
             if self._selecting_mode in [
                     _SelectionMode.MARKED,
@@ -1276,22 +1279,23 @@ class TimelineFrame(QGraphicsItem):
 
                     if abs(x - left_x) <= self._selection_handle_width:
                         self._selecting_mode = _SelectionMode.MOVE_LEFT
-                        self.scene().views()[0].setCursor(QCursor(Qt.SizeHorCursor))
+                        self.scene().views()[0].setCursor(QCursor(Qt.CursorShape.SizeHorCursor))
                         return
                     elif abs(x - right_x) <= self._selection_handle_width:
                         self._selecting_mode = _SelectionMode.MOVE_RIGHT
-                        self.scene().views()[0].setCursor(QCursor(Qt.SizeHorCursor))
+                        self.scene().views()[0].setCursor(QCursor(Qt.CursorShape.SizeHorCursor))
                         return
                     elif x > left_x and x < right_x:
                         self._selecting_mode = _SelectionMode.SHIFTING
-                        self.scene().views()[0].setCursor(QCursor(Qt.OpenHandCursor))
+                        self.scene().views()[0].setCursor(QCursor(Qt.CursorShape.OpenHandCursor))
                         return
                     else:
                         self._selecting_mode = _SelectionMode.MARKED
-                self.scene().views()[0].setCursor(QCursor(Qt.ArrowCursor))
+                self.scene().views()[0].setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         else:
             # Mouse dragging
-            if event.buttons() == Qt.MidButton or event.modifiers() == Qt.ShiftModifier:
+            if event.buttons() == Qt.MouseButton.MiddleButton or \
+                    event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
                 # Middle or shift: zoom and pan
                 dx_drag, dy_drag = x - self._dragged_pos.x(), y - self._dragged_pos.y()
 
@@ -1305,8 +1309,8 @@ class TimelineFrame(QGraphicsItem):
                         max(self._min_zoom_speed, 1.0 + self._zoom_sensitivity * dy_drag))
                     self.zoom_timeline(zoom, self.map_x_to_stamp(x))
 
-                self.scene().views()[0].setCursor(QCursor(Qt.ClosedHandCursor))
-            elif event.buttons() == Qt.LeftButton:
+                self.scene().views()[0].setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
+            elif event.buttons() == Qt.MouseButton.LeftButton:
                 # Left: move selected region and move selected region boundry
                 clicked_x = self._clicked_pos.x()
                 clicked_y = self._clicked_pos.y()
@@ -1356,13 +1360,13 @@ class TimelineFrame(QGraphicsItem):
 
     # Overrides QGraphicsItem.mousePressEvent
     def mousePressEvent(self, event):
-        if event.buttons() == Qt.LeftButton:
+        if event.buttons() == Qt.MouseButton.LeftButton:
             self.on_left_down(event)
             event.accept()
-        elif event.buttons() == Qt.MidButton:
+        elif event.buttons() == Qt.MouseButton.MiddleButton:
             self.on_middle_down(event)
             event.accept()
-        elif event.buttons() == Qt.RightButton:
+        elif event.buttons() == Qt.MouseButton.RightButton:
             topic = self.map_y_to_topic(event.scenePos().y())
             self.highlighted_topic = topic
             self.scene().update()

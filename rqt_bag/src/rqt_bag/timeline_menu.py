@@ -33,7 +33,7 @@ from python_qt_binding.QtWidgets import QDockWidget, QMenu, QVBoxLayout, QWidget
 class TopicPopupWidget(QWidget):
 
     def __init__(self, popup_name, timeline, viewer_type, topic):
-        super(TopicPopupWidget, self).__init__()
+        super().__init__()
         self.setObjectName(popup_name)
         self.setWindowTitle(popup_name)
 
@@ -50,13 +50,13 @@ class TopicPopupWidget(QWidget):
         if self._is_listening:
             self._timeline.remove_listener(self._topic, self._viewer)
             self._is_listening = False
-        super(TopicPopupWidget, self).hideEvent(event)
+        super().hideEvent(event)
 
     def showEvent(self, event):
         if not self._is_listening:
             self._timeline.add_listener(self._topic, self._viewer)
             self._is_listening = True
-        super(TopicPopupWidget, self).showEvent(event)
+        super().showEvent(event)
 
     def show(self, context):
         """
@@ -68,7 +68,7 @@ class TopicPopupWidget(QWidget):
             context.add_widget(self)
             # make the dock widget closable, even if it normally isn't
             dock_features = self.parent().features()
-            dock_features |= QDockWidget.DockWidgetClosable
+            dock_features |= QDockWidget.DockWidgetFeature.DockWidgetClosable
             self.parent().setFeatures(dock_features)
 
             # remove old listener
@@ -84,19 +84,18 @@ class TopicPopupWidget(QWidget):
             # create a new viewer
             self._viewer = self._viewer_type(self._timeline, self, self._topic)
             if not self._is_listening:
-                qDebug('Adding listener to topic {} of type {}'.format(
-                        self._topic, type(self._viewer)))
+                qDebug(f'Adding listener to topic {self._topic} of type {type(self._viewer)}')
                 self._timeline.add_listener(self._topic, self._viewer)
                 self._is_listening = True
 
-        super(TopicPopupWidget, self).show()
+        super().show()
 
 
 class TimelinePopupMenu(QMenu):
     """Custom popup menu displayed on rightclick from timeline."""
 
     def __init__(self, timeline, event, menu_topic):
-        super(TimelinePopupMenu, self).__init__()
+        super().__init__()
 
         self.parent = timeline
         self.timeline = timeline
@@ -211,7 +210,7 @@ class TimelinePopupMenu(QMenu):
             self._publish_all = None
             self._publish_none = None
 
-        action = self.exec_(event.screenPos())
+        action = self.exec(event.screenPos())
         if action is not None and action != 0:
             self.process(action)
 
@@ -222,7 +221,7 @@ class TimelinePopupMenu(QMenu):
         :param action: action to execute, ''QAction''
         :raises: when it doesn't recognice the action passed in, ''Exception''
         """
-        qDebug('TimelinePopupMenu process action {}'.format(action))
+        qDebug(f'TimelinePopupMenu process action {action}')
         if action == self._reset_timeline:
             self.timeline._timeline_frame.reset_timeline()
         elif action == self._play_all:

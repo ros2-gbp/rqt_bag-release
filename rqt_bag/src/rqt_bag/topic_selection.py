@@ -37,7 +37,7 @@ class TopicSelection(QWidget):
     recordSettingsSelected = Signal(bool, list)
 
     def __init__(self, node):
-        super(TopicSelection, self).__init__()
+        super().__init__()
         self._node = node
         self.setWindowTitle('Select the topics you want to record')
         self.resize(500, 700)
@@ -89,24 +89,25 @@ class TopicSelection(QWidget):
                 return
 
     def updateList(self, state, topic=None, force_update_state=False):
+        state = Qt.CheckState(state)
         if topic is None:  # The "All" checkbox was checked / unchecked
-            if state == Qt.Checked:
+            if state == Qt.CheckState.Checked:
                 self.item_all.setTristate(False)
                 for item in self.items_list:
-                    if item.checkState() == Qt.Unchecked:
-                        item.setCheckState(Qt.Checked)
-            elif state == Qt.Unchecked:
+                    if item.checkState() == Qt.CheckState.Unchecked:
+                        item.setCheckState(Qt.CheckState.Checked)
+            elif state == Qt.CheckState.Unchecked:
                 self.item_all.setTristate(False)
                 for item in self.items_list:
-                    if item.checkState() == Qt.Checked:
-                        item.setCheckState(Qt.Unchecked)
+                    if item.checkState() == Qt.CheckState.Checked:
+                        item.setCheckState(Qt.CheckState.Unchecked)
         else:
-            if state == Qt.Checked:
+            if state == Qt.CheckState.Checked:
                 self.selected_topics.append(topic)
             else:
                 self.selected_topics.remove(topic)
-                if self.item_all.checkState() == Qt.Checked:
-                    self.item_all.setCheckState(Qt.PartiallyChecked)
+                if self.item_all.checkState() == Qt.CheckState.Checked:
+                    self.item_all.setCheckState(Qt.CheckState.PartiallyChecked)
 
         if self.selected_topics == []:
             self.ok_button.setEnabled(False)
@@ -116,7 +117,7 @@ class TopicSelection(QWidget):
     def onButtonClicked(self):
         self.close()
         self.recordSettingsSelected.emit(
-            self.item_all.checkState() == Qt.Checked, self.selected_topics)
+            self.item_all.checkState() == Qt.CheckState.Checked, self.selected_topics)
 
     def onFromNodesButtonClicked(self):
         self.node_selection = NodeSelection(self, self._node)
