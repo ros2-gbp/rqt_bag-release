@@ -1,3 +1,28 @@
+## rqt_bag (rolling) - 2.3.5-1
+
+The packages in the `rqt_bag` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling --track rolling rqt_bag` on `Fri, 04 Sep 2026 07:33:12 -0000`
+
+These packages were released:
+- `rqt_bag`
+- `rqt_bag_plugins`
+
+Version of package(s) in repository `rqt_bag`:
+
+- upstream repository: https://github.com/ros-visualization/rqt_bag.git
+- release repository: https://github.com/ros2-gbp/rqt_bag-release.git
+- rosdistro version: `2.3.4-1`
+- old version: `2.3.4-1`
+- new version: `2.3.5-1`
+
+Versions of tools used:
+
+- bloom version: `0.14.3`
+- catkin_pkg version: `1.1.0`
+- rosdep version: `0.26.0`
+- rosdistro version: `1.1.0`
+- vcstools version: `0.1.42`
+
+
 ## rqt_bag (kilted) - 2.0.4-1
 
 The packages in the `rqt_bag` repository were released into the `kilted` distro by running `/usr/bin/bloom-release --rosdistro kilted --track kilted rqt_bag` on `Mon, 24 Aug 2026 08:16:02 -0000`
