@@ -2,36 +2,23 @@
 Changelog for package rqt_bag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.3.6 (2026-10-22)
+2.2.6 (2026-10-22)
 ------------------
-* Added missing deps in package.xml (`#217 <https://github.com/ros-visualization/rqt_bag/issues/217>`_)
-* Contributors: Alejandro Hernández Cordero
+* Use scoped PyQt6 enums instead of removed flat aliases (backport `#213 <https://github.com/ros-visualization/rqt_bag/issues/213>`_) (`#214 <https://github.com/ros-visualization/rqt_bag/issues/214>`_)
+* Contributors: mergify[bot]
 
-2.3.5 (2026-09-04)
+2.2.5 (2026-06-18)
 ------------------
-* Removed Qt5 support (`#215 <https://github.com/ros-visualization/rqt_bag/issues/215>`_)
-* Contributors: Alejandro Hernández Cordero
+* Modernizes python: super(), f-string and others (backport `#211 <https://github.com/ros-visualization/rqt_bag/issues/211>`_) (`#212 <https://github.com/ros-visualization/rqt_bag/issues/212>`_)
+* Contributors: mergify[bot]
 
-2.3.4 (2026-08-24)
-------------------
-* Use scoped PyQt6 enums instead of removed flat aliases (`#213 <https://github.com/ros-visualization/rqt_bag//issues/213>`_)
-* Contributors: Incheon Robotics
-
-2.3.3 (2026-06-18)
-------------------
-* Modernizes python: super(), f-string and others (`#211 <https://github.com/ros-visualization/rqt_bag/issues/211>`_)
-* Contributors: Alejandro Hernández Cordero
-
-2.3.2 (2026-06-05)
+2.2.4 (2026-06-05)
 ------------------
 
-2.3.1 (2026-05-13)
+2.2.3 (2026-05-13)
 ------------------
-* Fix Qt6 issues (`#207 <https://github.com/ros-visualization/rqt_bag/issues/207>`_)
-* Contributors: Alejandro Hernández Cordero
-
-2.3.0 (2026-05-07)
-------------------
+* Fix Qt6 issues (backport `#207 <https://github.com/ros-visualization/rqt_bag/issues/207>`_) (`#208 <https://github.com/ros-visualization/rqt_bag/issues/208>`_)
+* Contributors: mergify[bot]
 
 2.2.2 (2026-04-13)
 ------------------
